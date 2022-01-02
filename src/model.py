@@ -195,12 +195,12 @@ class NMF(torch.nn.Module):
 
         mlp_user_embedding = self.mlp_embedding_user(user_indices)
         mlp_item_embedding = self.mlp_embedding_item(item_indices)
-        mlp_vector = torch.concat(mlp_user_embedding, mlp_item_embedding)
+        mlp_vector = torch.concat([mlp_user_embedding, mlp_item_embedding], dim=1)
         mlp_vector = self.mlp_layer1(mlp_vector)
         mlp_vector = torch.nn.functional.relu(mlp_vector)
 
 
-        predict_vector = torch.concat(gmf_vector, mlp_vector)
+        predict_vector = torch.concat([gmf_vector, mlp_vector], dim=1)
         logits = self.affine_output(predict_vector)
         rating = self.logistic(logits)
         return rating
