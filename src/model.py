@@ -30,7 +30,7 @@ class Model(object):
               'num_users': int(self.my_id_bank.last_user_index+1), 
               'num_items': int(self.my_id_bank.last_item_index+1),
         }
-        print('Model is GMF++!')
+        print('Model is NMF!')
         self.model = NMF(self.config)
         self.model = self.model.to(self.args.device)
         print(self.model)
@@ -172,7 +172,7 @@ class GMF(torch.nn.Module):
 
 class NMF(torch.nn.Module):
     def __init__(self, config):
-        super(MLP, self).__init__()
+        super(NMF, self).__init__()
         self.num_users = config['num_users']
         self.num_items = config['num_items']
         self.latent_dim = config['latent_dim']
