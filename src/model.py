@@ -31,7 +31,7 @@ class Model(object):
               'num_items': int(self.my_id_bank.last_item_index+1),
         }
         print('Model is GMF++!')
-        self.model = GMF(self.config)
+        self.model = NMF(self.config)
         self.model = self.model.to(self.args.device)
         print(self.model)
         return self.model
@@ -43,7 +43,7 @@ class Model(object):
         ############
         ## Train
         ############
-        self.model.train()
+        self.model.train()  
         for epoch in range(self.args.num_epoch):
             print('Epoch {} starts !'.format(epoch))
             total_loss = 0
@@ -71,8 +71,9 @@ class Model(object):
                     loss.backward()
                     opt.step()    
                     total_loss += loss.item()
+            print('Total Loss: ', total_loss)        
             
-            sys.stdout.flush()
+            #sys.stdout.flush()
             print('-' * 80)
         
         print('Model is trained! and saved at:')
@@ -163,6 +164,44 @@ class GMF(torch.nn.Module):
             item_embedding = self.embedding_item[item_indices]
         element_product = torch.mul(user_embedding, item_embedding)
         logits = self.affine_output(element_product)
+        rating = self.logistic(logits)
+        return rating
+
+    def init_weight(self):
+        pass
+
+class NMF(torch.nn.Module):
+    def __init__(self, config):
+        super(MLP, self).__init__()
+        self.num_users = config['num_users']
+        self.num_items = config['num_items']
+        self.latent_dim = config['latent_dim']
+
+       
+        self.gmf_embedding_user = torch.nn.Embedding(num_embeddings=self.num_users, embedding_dim=self.latent_dim)
+        self.gmf_embedding_item = torch.nn.Embedding(num_embeddings=self.num_items, embedding_dim=self.latent_dim)
+
+        self.mlp_embedding_user = torch.nn.Embedding(num_embeddings=self.num_users, embedding_dim=self.latent_dim*2)
+        self.mlp_embedding_item = torch.nn.Embedding(num_embeddings=self.num_items, embedding_dim=self.latent_dim*2)
+        self.mlp_layer1 = torch.nn.Linear(in_features=self.latent_dim*4, out_features=self.latent_dim)
+
+        self.affine_output = torch.nn.Linear(in_features=self.latent_dim*2, out_features=1)
+        self.logistic = torch.nn.Sigmoid()
+
+    def forward(self, user_indices, item_indices):
+        gmf_user_embedding = self.gmf_embedding_user(user_indices)
+        gmf_item_embedding = self.gmf_embedding_item(item_indices)
+        gmf_vector = torch.mul(gmf_user_embedding, gmf_item_embedding)
+
+        mlp_user_embedding = self.mlp_embedding_user(user_indices)
+        mlp_item_embedding = self.mlp_embedding_item(item_indices)
+        mlp_vector = torch.concat(mlp_user_embedding, mlp_item_embedding)
+        mlp_vector = self.mlp_layer1(mlp_vector)
+        mlp_vector = torch.nn.functional.relu(mlp_vector)
+
+
+        predict_vector = torch.concat(gmf_vector, mlp_vector)
+        logits = self.affine_output(predict_vector)
         rating = self.logistic(logits)
         return rating
 
