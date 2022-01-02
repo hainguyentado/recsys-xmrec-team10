@@ -50,10 +50,8 @@ def create_arg_parser():
 
 
 
-def main():
-    
-    parser = create_arg_parser()
-    args = parser.parse_args()
+def build(args):
+
     set_seed(args)
     
     if torch.cuda.is_available() and args.cuda:
@@ -125,5 +123,5 @@ def main():
     
     print('Experiment finished successfully!')
     
-if __name__=="__main__":
-    main()
+#if __name__=="__main__":
+#   main()
