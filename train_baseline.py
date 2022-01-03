@@ -15,7 +15,7 @@ from model import Model
 from utils import *
 from data import *
 
-
+from time import time
 
 
 def create_arg_parser():
@@ -110,17 +110,21 @@ def build(args):
     
     print('Run output files:')
     # validation data prediction
+    start_time = time()
     valid_run_mf = mymodel.predict(tgt_valid_dataloader)
     valid_output_file = f'valid_{args.tgt_market}_{args.src_markets}_{args.exp_name}.tsv'
     print(f'--validation: {valid_output_file}')
     write_run_file(valid_run_mf, valid_output_file)
-    
+    predict_time = round(time() - start_time, 4)
+    print('Predict valid time: ', predict_time)
     # test data prediction
+    start_time = time()
     test_run_mf = mymodel.predict(tgt_test_dataloader)
     test_output_file = f'test_{args.tgt_market}_{args.src_markets}_{args.exp_name}.tsv'
     print(f'--test: {test_output_file}')
     write_run_file(test_run_mf, test_output_file)
-    
+    predict_time = round(time() - start_time, 4)
+    print('Predict test time: ', predict_time)
     print('Experiment finished successfully!')
     
 #if __name__=="__main__":

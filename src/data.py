@@ -200,7 +200,7 @@ class TaskGenerator(object):
         for row in train_ratings.itertuples():
             users.append(int(row.userId))
             items.append(int(row.itemId))
-            ratings.append(float(row.rating))
+            ratings.append(float(row.rating)/5)
             
             cur_negs = self.negatives_train[int(row.userId)]
             cur_negs = random.sample(cur_negs, min(num_negatives, len(cur_negs)) )

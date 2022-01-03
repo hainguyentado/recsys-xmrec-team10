@@ -127,8 +127,7 @@ class Model(object):
 
 
 
-        
-    
+
 class GMF(torch.nn.Module):
     def __init__(self, config):
         super(GMF, self).__init__()
