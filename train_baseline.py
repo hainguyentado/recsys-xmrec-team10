@@ -115,7 +115,7 @@ def build(args):
     valid_output_file = f'valid_{args.tgt_market}_{args.src_markets}_{args.exp_name}.tsv'
     print(f'--validation: {valid_output_file}')
     write_run_file(valid_run_mf, valid_output_file)
-    predict_time = round(time() - start_time, 4)
+    predict_time = time() - start_time
     print('Predict valid time: ', predict_time)
     # test data prediction
     start_time = time()
@@ -123,7 +123,7 @@ def build(args):
     test_output_file = f'test_{args.tgt_market}_{args.src_markets}_{args.exp_name}.tsv'
     print(f'--test: {test_output_file}')
     write_run_file(test_run_mf, test_output_file)
-    predict_time = round(time() - start_time, 4)
+    predict_time = time() - start_time
     print('Predict test time: ', predict_time)
     print('Experiment finished successfully!')
     

@@ -184,8 +184,8 @@ class NMF(torch.nn.Module):
 
         self.mlp_embedding_user = torch.nn.Embedding(num_embeddings=self.num_users, embedding_dim=self.latent_dim*2)
         self.mlp_embedding_item = torch.nn.Embedding(num_embeddings=self.num_items, embedding_dim=self.latent_dim*2)
-        self.mlp_layer1 = torch.nn.Linear(in_features=self.latent_dim*4, out_features=self.latent_dim)
-
+        self.mlp_layer1 = torch.nn.Linear(in_features=self.latent_dim*4, out_features=self.latent_dim*2)
+        self.mlp_layer2 = torch.nn.Linear(in_features=self.latent_dim*2, out_features=self.latent_dim)
         self.affine_output = torch.nn.Linear(in_features=self.latent_dim*2, out_features=1)
         self.logistic = torch.nn.Sigmoid()
 
@@ -199,7 +199,8 @@ class NMF(torch.nn.Module):
         mlp_vector = torch.concat([mlp_user_embedding, mlp_item_embedding], dim=1)
         mlp_vector = self.mlp_layer1(mlp_vector)
         mlp_vector = torch.nn.functional.relu(mlp_vector)
-
+        mlp_vector = self.mlp_layer2(mlp_vector)
+        mlp_vector = torch.nn.functional.relu(mlp_vector)
 
         predict_vector = torch.concat([gmf_vector, mlp_vector], dim=1)
         logits = self.affine_output(predict_vector)
