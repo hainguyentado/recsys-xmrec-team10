@@ -32,7 +32,7 @@ class Model(object):
               'num_items': int(self.my_id_bank.last_item_index+1),
         }
         print('Model is NMF!')
-        self.model = GMF(self.config)
+        self.model = NMF(self.config)
         self.model = self.model.to(self.args.device)
         print(self.model)
         return self.model
