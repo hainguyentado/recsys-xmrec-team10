@@ -1,6 +1,7 @@
 import torch
 import pickle
 from utils import *
+from time import time
 
 
 class Model(object):
@@ -31,7 +32,7 @@ class Model(object):
               'num_items': int(self.my_id_bank.last_item_index+1),
         }
         print('Model is NMF!')
-        self.model = NMF(self.config)
+        self.model = GMF(self.config)
         self.model = self.model.to(self.args.device)
         print(self.model)
         return self.model
@@ -45,9 +46,10 @@ class Model(object):
         ############
         self.model.train()  
         for epoch in range(self.args.num_epoch):
-            print('Epoch {} starts !'.format(epoch))
+            epoch_time = time()
             total_loss = 0
-
+            print('Epoch {} starts !'.format(epoch))
+            
             # train the model for some certain iterations
             train_dataloader.refresh_dataloaders()
             data_lens = [len(train_dataloader[idx]) for idx in range(train_dataloader.num_tasks)]
@@ -71,7 +73,7 @@ class Model(object):
                     loss.backward()
                     opt.step()    
                     total_loss += loss.item()
-            print('Total Loss: ', total_loss)        
+            print('Total Loss: ', total_loss, ' Time: ', time()-epoch_time)        
             
             #sys.stdout.flush()
             print('-' * 80)
