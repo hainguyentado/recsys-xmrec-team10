@@ -158,6 +158,9 @@ class GMF(torch.nn.Module):
             self.trainable_item = True
         else:
             self.embedding_item = config['embedding_item']
+        
+        self.user_biases = nn.Embedding(self.num_users, 1)
+        self.item_biases = nn.Embedding(self.num_items, 1)
 
         self.affine_output = torch.nn.Linear(in_features=self.latent_dim, out_features=1)
         self.logistic = torch.nn.Sigmoid()
@@ -173,6 +176,8 @@ class GMF(torch.nn.Module):
             item_embedding = self.embedding_item[item_indices]
         element_product = torch.mul(user_embedding, item_embedding)
         logits = self.affine_output(element_product)
+        logits += self.user_biases(user_indices) + self.item_biases(item_indices) 
+
         rating = self.logistic(logits)
         return rating
 
