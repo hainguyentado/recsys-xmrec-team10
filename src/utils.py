@@ -34,7 +34,7 @@ def read_qrel_file(qrel_file):
 
 
 def write_run_file(rankings, model_output_run):
-    #os.makedirs(os.path.dirname(model_output_run), exist_ok=True)
+    os.makedirs(os.path.dirname(model_output_run), exist_ok=True)
     with open(model_output_run, 'w') as f:
         f.write(f'userId\titemId\tscore\n')
         for userid, cranks in rankings.items():

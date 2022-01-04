@@ -115,11 +115,11 @@ def build(args):
     print('Run output files:')
     # validation data prediction
     valid_run_mf = mymodel.predict(tgt_valid_dataloader)
-    valid_output_file = f'valid_{args.tgt_market}_{args.src_markets}_{args.exp_name}.tsv'
-    #valid_output_file = os.path.join('baseline_outputs', args.exp_name, args.tgt_market, 'valid_pred.tsv')
-    
-    write_run_file(valid_run_mf, valid_output_file)
+    #valid_output_file = f'valid_{args.tgt_market}_{args.src_markets}_{args.exp_name}.tsv'
+    valid_output_file = os.path.join('baseline_outputs', args.exp_name, args.tgt_market, 'valid_pred.tsv')
     print(f'--validation: {valid_output_file}')
+    write_run_file(valid_run_mf, valid_output_file)
+    
     # print evaluation
     print('Evaluating the validation set\n ')
 
@@ -131,8 +131,8 @@ def build(args):
     print('Experiment finished successfully!')
     valid_qrel_mf = read_qrel_file(os.path.join('DATA', args.tgt_market, 'valid_qrel.tsv'))
     task_ov_val, _ = get_evaluations_final(valid_run_mf, valid_qrel_mf)
-    for score_name, score_val in task_ov_val.items():
-        print("======= Set val : score(" + score_name + ")=%0.12f =======" % score_val)
+    for score_name in ['ndcg_cut_10', 'recall_10', 'P_10', 'map_cut_10']:
+        print("======= Set val : score(" + score_name + ")=%0.12f =======" % task_ov_val[score_name])
     
 #if __name__=="__main__":
 #   main()
