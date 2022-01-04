@@ -128,11 +128,11 @@ def build(args):
     #test_output_file = f'test_{args.tgt_market}_{args.src_markets}_{args.exp_name}.tsv'
     #print(f'--test: {test_output_file}')
     #write_run_file(test_run_mf, test_output_file)
-    print('Experiment finished successfully!')
+    
     valid_qrel_mf = read_qrel_file(os.path.join('DATA', args.tgt_market, 'valid_qrel.tsv'))
     task_ov_val, _ = get_evaluations_final(valid_run_mf, valid_qrel_mf)
     for score_name in ['ndcg_cut_10', 'recall_10', 'P_10', 'map_cut_10']:
         print("======= Set val : score(" + score_name + ")=%0.12f =======" % task_ov_val[score_name])
-    
+    print('Experiment finished successfully!')
 #if __name__=="__main__":
 #   main()

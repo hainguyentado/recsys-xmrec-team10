@@ -238,7 +238,7 @@ class MLP(torch.nn.Module):
         # Specify number of users, number of items, and number of latent dimensions
         self.num_users = config['num_users']
         self.num_items = config['num_items']
-        self.latent_dim = config['latent_dim']
+        self.latent_dim = config['latent_dim_mlp']
 
         # Generate user embedding
         self.embedding_user = torch.nn.Embedding(num_embeddings=self.num_users, embedding_dim=self.latent_dim)

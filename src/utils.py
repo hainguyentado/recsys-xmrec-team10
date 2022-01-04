@@ -35,11 +35,11 @@ def read_qrel_file(qrel_file):
 
 def write_run_file(rankings, model_output_run):
     os.makedirs(os.path.dirname(model_output_run), exist_ok=True)
-    with open(model_output_run, 'w') as f:
-        f.write(f'userId\titemId\tscore\n')
+    with open(model_output_run, 'w') as fo:
+        fo.write(f'userId\titemId\tscore\n')
         for userid, cranks in rankings.items():
             for itemid, score in cranks.items():
-                f.write(f'{userid}\t{itemid}\t{score}\n')
+                fo.write(f'{userid}\t{itemid}\t{score}\n')
 
 
 def use_optimizer(network, params):
