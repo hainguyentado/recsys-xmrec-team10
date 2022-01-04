@@ -26,7 +26,7 @@ def build_ref_pred_pair(ref_dict, pred_dict):
 
 
 def get_evaluations_final(run_mf, qrel):
-    metrics = {'recall_10', 'ndcg_cut_10', 'success_10'}
+    metrics = {'recall_10', 'ndcg_cut_10'}
     eval_obj = Evaluator(metrics)
     indiv_res = eval_obj.evaluate(run_mf, qrel)
     overall_res = eval_obj.show_all()
