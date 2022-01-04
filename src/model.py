@@ -89,6 +89,7 @@ class Model(object):
         
     # produce the ranking of items for users
     def predict(self, eval_dataloader):
+        stime = time()
         self.model.eval()
         task_rec_all = []
         task_unq_users = set()
@@ -112,6 +113,7 @@ class Model(object):
             task_unq_users = task_unq_users.union(set(cur_users))
 
         task_run_mf = get_run_mf(task_rec_all, task_unq_users, self.my_id_bank)
+        print('Predict time: ', time() - stime)
         return task_run_mf
     
     ## SAVE the model and idbank

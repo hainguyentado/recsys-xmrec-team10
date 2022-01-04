@@ -14,7 +14,7 @@ sys.path.insert(1, 'src')
 from model import Model
 from utils import *
 from data import *
-
+from validate_submission import *
 from time import time
 
 
@@ -104,7 +104,7 @@ def build(args):
     ## Validation and Test Run
     ############
     tgt_valid_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_valid, args.batch_size)
-    tgt_test_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_test, args.batch_size)
+    #tgt_test_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_test, args.batch_size)
     
     
     ############
@@ -115,22 +115,25 @@ def build(args):
     
     print('Run output files:')
     # validation data prediction
-    start_time = time()
     valid_run_mf = mymodel.predict(tgt_valid_dataloader)
-    valid_output_file = f'valid_{args.tgt_market}_{args.src_markets}_{args.exp_name}.tsv'
+    #valid_output_file = f'valid_{args.tgt_market}_{args.src_markets}_{args.exp_name}.tsv'
+    valid_output_file = os.path.join('baseline_outputs', args.exp_name, args.tgt_market, 'valid_pred.tsv')
     print(f'--validation: {valid_output_file}')
     write_run_file(valid_run_mf, valid_output_file)
-    predict_time = time() - start_time
-    print('Predict valid time: ', predict_time)
+
+    # print evaluation
+    print('Evaluating the validation set\n ')
+
     # test data prediction
-    start_time = time()
-    test_run_mf = mymodel.predict(tgt_test_dataloader)
-    test_output_file = f'test_{args.tgt_market}_{args.src_markets}_{args.exp_name}.tsv'
-    print(f'--test: {test_output_file}')
-    write_run_file(test_run_mf, test_output_file)
-    predict_time = time() - start_time
-    print('Predict test time: ', predict_time)
+    #test_run_mf = mymodel.predict(tgt_test_dataloader)
+    #test_output_file = f'test_{args.tgt_market}_{args.src_markets}_{args.exp_name}.tsv'
+    #print(f'--test: {test_output_file}')
+    #write_run_file(test_run_mf, test_output_file)
     print('Experiment finished successfully!')
+    valid_qrel_mf = read_qrel_file(os.path.join('DATA', args.tgt_market, 'valid_qrel.tsv'))
+    task_ov_val, _ = get_evaluations_final(valid_run_mf, valid_qrel_mf)
+    for score_name, score_val in task_ov_val
+    print("======= Set val : score(" + score_name + ")=%0.12f =======" % score_val)
     
 #if __name__=="__main__":
 #   main()
