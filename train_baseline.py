@@ -132,7 +132,7 @@ def build(args):
     print('Experiment finished successfully!')
     valid_qrel_mf = read_qrel_file(os.path.join('DATA', args.tgt_market, 'valid_qrel.tsv'))
     task_ov_val, _ = get_evaluations_final(valid_run_mf, valid_qrel_mf)
-    for score_name, score_val in task_ov_val:
+    for score_name, score_val in task_ov_val.items():
         print("======= Set val : score(" + score_name + ")=%0.12f =======" % score_val)
     
 #if __name__=="__main__":
