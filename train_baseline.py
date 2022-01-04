@@ -92,7 +92,7 @@ def build(args):
             cur_src_data_dir = os.path.join(args.data_dir, cur_src_market, train_file_names)
             print(f'Loading {cur_src_market}: {cur_src_data_dir}')
             cur_src_train_ratings = pd.read_csv(cur_src_data_dir, sep='\t')
-            cur_src_train_ratings.userId = cur_src_train_ratings['userId'].apply(lambda x: tgt_market + x[2:])
+            cur_src_train_ratings.userId = cur_src_train_ratings['userId'].apply(lambda x: args.tgt_market + x[2:])
             cur_src_task_generator = TaskGenerator(cur_src_train_ratings, my_id_bank)
             task_gen_all[cur_task_index] = cur_src_task_generator
             cur_task_index+=1
