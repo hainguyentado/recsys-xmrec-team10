@@ -196,9 +196,9 @@ class NMF(torch.nn.Module):
         #self.mlp_layer1 = torch.nn.Linear(in_features=self.latent_dim*4, out_features=self.latent_dim*2)
         #self.mlp_layer2 = torch.nn.Linear(in_features=self.latent_dim*2, out_features=self.latent_dim)
         self.fc_layers = torch.nn.ModuleList()
-        for idx, (in_size, out_size) in enumerate(zip(mlp_layers[:-1], mlp_layers[1:])):
+        for idx, (in_size, out_size) in enumerate(zip(self.mlp_layers[:-1], self.mlp_layers[1:])):
             self.fc_layers.append(torch.nn.Linear(in_size, out_size))
-        self.affine_output = torch.nn.Linear(in_features=self.latent_dim + mlp_layers[-1], out_features=1)
+        self.affine_output = torch.nn.Linear(in_features=self.latent_dim + self.mlp_layers[-1], out_features=1)
         self.logistic = torch.nn.Sigmoid()
 
     def forward(self, user_indices, item_indices):
