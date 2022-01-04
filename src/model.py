@@ -33,13 +33,13 @@ class Model(object):
               'num_items': int(self.my_id_bank.last_item_index+1),
               'mlp_layers': self.args.mlp_layers #[16 64 32 16 8]
         }
-        if self.args.alias == 'gmf':
+        if config['alias'] == 'gmf':
             self.model = GMF(self.config)
-        elif self.args.alias == 'nmf':
+        elif config['alias'] == 'nmf':
             self.model = NMF(self.config)
-        elif self.args.alias == 'mlp':
+        elif config['alias'] == 'mlp':
             self.model = MLP(self.config)
-        print(f'Model is {alias.upper()}!')
+        print(f'Model is {config['alias'].upper()}!')
         self.model = self.model.to(self.args.device)
         print(self.model)
         return self.model
