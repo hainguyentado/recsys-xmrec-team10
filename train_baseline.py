@@ -43,7 +43,7 @@ def create_arg_parser():
     parser.add_argument('--latent_dim', type=int, default=8, help='latent dimensions')
     parser.add_argument('--latent_dim_mlp', type=int, default=8, help='latent dimensions for mlp model')
     parser.add_argument('--num_negative', type=int, default=4, help='num of negative samples during training')
-    parser.add_argument('--mlp_layers', type=list, default=[16, 64, 32, 16, 8], help='layers config for MLP model')
+    parser.add_argument('--mlp_layers', type=int, default=[16, 64, 32, 16, 8], help='layers config for MLP model')
 
     parser.add_argument('--cuda', action='store_true', help='use of cuda')
     parser.add_argument('--seed', type=int, default=42, help='manual seed init')
@@ -133,6 +133,6 @@ def build(args):
     task_ov_val, _ = get_evaluations_final(valid_run_mf, valid_qrel_mf)
     for score_name in ['ndcg_cut_10', 'recall_10', 'P_10', 'map_cut_10']:
         print("======= Set val : score(" + score_name + ")=%0.12f =======" % task_ov_val[score_name])
-    print('Experiment finished successfully!')
+    print('===============\nExperiment finished successfully!')
 #if __name__=="__main__":
 #   main()
