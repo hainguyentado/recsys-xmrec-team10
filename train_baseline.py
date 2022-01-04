@@ -118,9 +118,8 @@ def build(args):
     valid_run_mf = mymodel.predict(tgt_valid_dataloader)
     #valid_output_file = f'valid_{args.tgt_market}_{args.src_markets}_{args.exp_name}.tsv'
     valid_output_file = os.path.join('baseline_outputs', args.exp_name, args.tgt_market, 'valid_pred.tsv')
-    print(f'--validation: {valid_output_file}')
     write_run_file(valid_run_mf, valid_output_file)
-
+    print(f'--validation: {valid_output_file}')
     # print evaluation
     print('Evaluating the validation set\n ')
 
