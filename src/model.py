@@ -15,9 +15,8 @@ class Model(object):
         if self.my_id_bank is None:
             print('ERR: Please load an id_bank before model preparation!')
             return None
-            
-        self.config = {'alias': self.args.alias, #gmf
-              'batch_size': self.args.batch_size, #1024,
+        model_alias = self.args.alias #gmf
+        self.config = {'batch_size': self.args.batch_size, #1024,
               'optimizer': 'adam',
               'adam_lr': self.args.lr, #0.005, #1e-3,
               'latent_dim': self.args.latent_dim, #8
@@ -33,13 +32,13 @@ class Model(object):
               'num_items': int(self.my_id_bank.last_item_index+1),
               'mlp_layers': self.args.mlp_layers #[16 64 32 16 8]
         }
-        if self.config['alias'] == 'gmf':
+        if model_alias == 'gmf':
             self.model = GMF(self.config)
-        elif self.config['alias'] == 'nmf':
+        elif model_alias == 'nmf':
             self.model = NMF(self.config)
-        elif self.config['alias'] == 'mlp':
+        elif model_alias  == 'mlp':
             self.model = MLP(self.config)
-        print(f'Model is {self.config['alias'].upper()}!')
+        print(f'Model is {model_alias.upper()}!')
         self.model = self.model.to(self.args.device)
         print(self.model)
         return self.model
