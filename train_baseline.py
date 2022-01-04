@@ -14,7 +14,6 @@ sys.path.insert(1, 'src')
 from model import Model
 from utils import *
 from data import *
-from validate_submission import *
 from time import time
 
 
