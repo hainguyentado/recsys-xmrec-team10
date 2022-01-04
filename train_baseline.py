@@ -87,7 +87,6 @@ def build(args):
     src_market_list = args.src_markets.split('-')
     if 'none' not in src_market_list:
         cur_task_index = 1
-        print(f'Loading source markets {args.src_markets}')
         for cur_src_market in src_market_list:
             cur_src_data_dir = os.path.join(args.data_dir, cur_src_market, train_file_names)
             print(f'Loading {cur_src_market}: {cur_src_data_dir}')
