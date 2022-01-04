@@ -36,11 +36,13 @@ def create_arg_parser():
     
     
     # MODEL arguments 
+    parser.add_argument('--alias', type=str, default='gmf', help='type of model used to train' )
     parser.add_argument('--num_epoch', type=int, default=25, help='number of epoches')
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size')
     parser.add_argument('--lr', type=float, default=0.005, help='learning rate')
     parser.add_argument('--l2_reg', type=float, default=1e-07, help='learning rate')
     parser.add_argument('--latent_dim', type=int, default=8, help='latent dimensions')
+    parser.add_argument('--latent_dim_mlp', type=int, default=8, help='latent dimensions for mlp model')
     parser.add_argument('--num_negative', type=int, default=4, help='num of negative samples during training')
     parser.add_argument('--mlp_layers', type=list, default=[16, 64, 32, 16, 8], help='layers config for MLP model')
 
@@ -85,13 +87,16 @@ def build(args):
     src_market_list = args.src_markets.split('-')
     if 'none' not in src_market_list:
         cur_task_index = 1
+        print(f'Loading source markets {args.src_markets}')
         for cur_src_market in src_market_list:
             cur_src_data_dir = os.path.join(args.data_dir, cur_src_market, train_file_names)
             print(f'Loading {cur_src_market}: {cur_src_data_dir}')
             cur_src_train_ratings = pd.read_csv(cur_src_data_dir, sep='\t')
+            cur_src_train_ratings.userId = cur_src_train_ratings['userId'].apply(lambda x: tgt_market + x[2:])
             cur_src_task_generator = TaskGenerator(cur_src_train_ratings, my_id_bank)
             task_gen_all[cur_task_index] = cur_src_task_generator
             cur_task_index+=1
+        print('Loaded source data!\n')
 
     train_tasksets = MetaMarket_Dataset(task_gen_all, num_negatives=args.num_negative, meta_split='train' )
     train_dataloader = MetaMarket_DataLoader(train_tasksets, sample_batch_size=args.batch_size, shuffle=True, num_workers=0)

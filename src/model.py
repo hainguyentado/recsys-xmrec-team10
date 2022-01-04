@@ -8,19 +8,20 @@ class Model(object):
     def __init__(self, args, my_id_bank):
         self.args = args
         self.my_id_bank = my_id_bank
-        self.model = self.prepare_gmf()
+        self.model = self.prepare_model()
         
     
-    def prepare_gmf(self):
+    def prepare_model(self):
         if self.my_id_bank is None:
             print('ERR: Please load an id_bank before model preparation!')
             return None
             
-        self.config = {'alias': 'gmf',
+        self.config = {'alias': self.args.alias, #gmf
               'batch_size': self.args.batch_size, #1024,
               'optimizer': 'adam',
               'adam_lr': self.args.lr, #0.005, #1e-3,
               'latent_dim': self.args.latent_dim, #8
+              'latent_dim_mlp': self.args.latent_dim_mlp, #8
               'num_negative': self.args.num_negative, #4
               'l2_regularization': self.args.l2_reg, #1e-07,
               'use_cuda': torch.cuda.is_available() and self.args.cuda, #False,
@@ -30,11 +31,15 @@ class Model(object):
               'save_trained': True,
               'num_users': int(self.my_id_bank.last_user_index+1), 
               'num_items': int(self.my_id_bank.last_item_index+1),
-              'mlp_layers': self.args.mlp_layers
-
+              'mlp_layers': self.args.mlp_layers #[16 64 32 16 8]
         }
-        print('Model is NMF!')
-        self.model = MLP(self.config)
+        if self.args.alias == 'gmf':
+            self.model = GMF(self.config)
+        elif self.args.alias == 'nmf':
+            self.model = NMF(self.config)
+        elif self.args.alias == 'mlp':
+            self.model = MLP(self.config)
+        print(f'Model is {alias.upper()}!')
         self.model = self.model.to(self.args.device)
         print(self.model)
         return self.model
@@ -179,16 +184,20 @@ class NMF(torch.nn.Module):
         self.num_users = config['num_users']
         self.num_items = config['num_items']
         self.latent_dim = config['latent_dim']
-
+        self.latent_dim_mlp = config['latent_dim_mlp']
+        self.mlp_layers = config['mlp_layers']
        
         self.gmf_embedding_user = torch.nn.Embedding(num_embeddings=self.num_users, embedding_dim=self.latent_dim)
         self.gmf_embedding_item = torch.nn.Embedding(num_embeddings=self.num_items, embedding_dim=self.latent_dim)
 
-        self.mlp_embedding_user = torch.nn.Embedding(num_embeddings=self.num_users, embedding_dim=self.latent_dim*2)
-        self.mlp_embedding_item = torch.nn.Embedding(num_embeddings=self.num_items, embedding_dim=self.latent_dim*2)
-        self.mlp_layer1 = torch.nn.Linear(in_features=self.latent_dim*4, out_features=self.latent_dim*2)
-        self.mlp_layer2 = torch.nn.Linear(in_features=self.latent_dim*2, out_features=self.latent_dim)
-        self.affine_output = torch.nn.Linear(in_features=self.latent_dim*2, out_features=1)
+        self.mlp_embedding_user = torch.nn.Embedding(num_embeddings=self.num_users, embedding_dim=self.latent_dim_mlp)
+        self.mlp_embedding_item = torch.nn.Embedding(num_embeddings=self.num_items, embedding_dim=self.latent_dim_mlp)
+        #self.mlp_layer1 = torch.nn.Linear(in_features=self.latent_dim*4, out_features=self.latent_dim*2)
+        #self.mlp_layer2 = torch.nn.Linear(in_features=self.latent_dim*2, out_features=self.latent_dim)
+        self.fc_layers = torch.nn.ModuleList()
+        for idx, (in_size, out_size) in enumerate(zip(mlp_layers[:-1], mlp_layers[1:])):
+            self.fc_layers.append(torch.nn.Linear(in_size, out_size))
+        self.affine_output = torch.nn.Linear(in_features=self.latent_dim + mlp_layers[-1], out_features=1)
         self.logistic = torch.nn.Sigmoid()
 
     def forward(self, user_indices, item_indices):
@@ -199,10 +208,13 @@ class NMF(torch.nn.Module):
         mlp_user_embedding = self.mlp_embedding_user(user_indices)
         mlp_item_embedding = self.mlp_embedding_item(item_indices)
         mlp_vector = torch.concat([mlp_user_embedding, mlp_item_embedding], dim=1)
-        mlp_vector = self.mlp_layer1(mlp_vector)
-        mlp_vector = torch.nn.functional.relu(mlp_vector)
-        mlp_vector = self.mlp_layer2(mlp_vector)
-        mlp_vector = torch.nn.functional.relu(mlp_vector)
+        #mlp_vector = self.mlp_layer1(mlp_vector)
+        #mlp_vector = torch.nn.functional.relu(mlp_vector)
+        #mlp_vector = self.mlp_layer2(mlp_vector)
+        #mlp_vector = torch.nn.functional.relu(mlp_vector)
+        for idx, _ in enumerate(range(len(self.fc_layers))):
+            mlp_vector = self.fc_layers[idx](mlp_vector)
+            mlp_vector = torch.nn.ReLU()(mlp_vector)
 
         predict_vector = torch.concat([gmf_vector, mlp_vector], dim=1)
         logits = self.affine_output(predict_vector)
