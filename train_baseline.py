@@ -42,7 +42,8 @@ def create_arg_parser():
     parser.add_argument('--l2_reg', type=float, default=1e-07, help='learning rate')
     parser.add_argument('--latent_dim', type=int, default=8, help='latent dimensions')
     parser.add_argument('--num_negative', type=int, default=4, help='num of negative samples during training')
-    
+    parser.add_argument('--mlp_layers', type=list, default=[16, 64, 32, 16, 8], help='layers config for MLP model')
+
     parser.add_argument('--cuda', action='store_true', help='use of cuda')
     parser.add_argument('--seed', type=int, default=42, help='manual seed init')
     

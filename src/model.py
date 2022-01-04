@@ -30,9 +30,11 @@ class Model(object):
               'save_trained': True,
               'num_users': int(self.my_id_bank.last_user_index+1), 
               'num_items': int(self.my_id_bank.last_item_index+1),
+              'mlp_layers': self.args.mlp_layers
+
         }
         print('Model is NMF!')
-        self.model = NMF(self.config)
+        self.model = MLP(self.config)
         self.model = self.model.to(self.args.device)
         print(self.model)
         return self.model
@@ -205,6 +207,70 @@ class NMF(torch.nn.Module):
         predict_vector = torch.concat([gmf_vector, mlp_vector], dim=1)
         logits = self.affine_output(predict_vector)
         rating = self.logistic(logits)
+        return rating
+
+    def init_weight(self):
+        pass
+
+class MLP(torch.nn.Module):
+
+    def __init__(self, config):
+        """
+        Function to initialize the MLP class
+        :param config: configuration choice
+        """
+        super(MLP, self).__init__()
+
+        self.config = config
+        # Specify number of users, number of items, and number of latent dimensions
+        self.num_users = config['num_users']
+        self.num_items = config['num_items']
+        self.latent_dim = config['latent_dim']
+
+        # Generate user embedding
+        self.embedding_user = torch.nn.Embedding(num_embeddings=self.num_users, embedding_dim=self.latent_dim)
+        # Generate item embedding
+        self.embedding_item = torch.nn.Embedding(num_embeddings=self.num_items, embedding_dim=self.latent_dim)
+
+        # Generate a list of Fully-Connected layers
+        self.fc_layers = torch.nn.ModuleList()
+        # Apply linear transformations between each fully-connected layer
+        for idx, (in_size, out_size) in enumerate(zip(config['mlp_layers'][:-1], config['mlp_layers'][1:])):
+            self.fc_layers.append(torch.nn.Linear(in_size, out_size))
+
+        # Apply a linear transformation to the incoming last fully-connected layer -> output of size 1
+        self.affine_output = torch.nn.Linear(in_features=config['mlp_layers'][-1], out_features=1)
+        # Perform sigmoid activation function
+        self.logistic = torch.nn.Sigmoid()
+
+    def forward(self, user_indices, item_indices):
+        """
+        Function to perform a forward pass for rating prediction
+        :param user_indices: a list of user indices
+        :param item_indices: a list of item indices
+        :return: predicted rating
+        """
+
+        # Generate user embedding from user indices
+        user_embedding = self.embedding_user(user_indices)
+        # Generate item embedding from item indices
+        item_embedding = self.embedding_item(item_indices)
+        # Concatenate the user and iem embeddings -> Resulting a latent vector
+        vector = torch.cat([user_embedding, item_embedding], dim=-1)
+
+        # Go through all fully-connected layers
+        for idx, _ in enumerate(range(len(self.fc_layers))):
+            vector = self.fc_layers[idx](vector)
+            # Perform ReLU activation
+            vector = torch.nn.ReLU()(vector)
+            # vector = torch.nn.BatchNorm1d()(vector)
+            # vector = torch.nn.Dropout(p=0.5)(vector)
+
+        # Apply linear transformation to the final vector
+        logits = self.affine_output(vector)
+        # Apply sigmoid (logistic) to get the final predicted rating
+        rating = self.logistic(logits)
+
         return rating
 
     def init_weight(self):
