@@ -159,8 +159,8 @@ class GMF(torch.nn.Module):
         else:
             self.embedding_item = config['embedding_item']
         
-        self.user_biases = nn.Embedding(self.num_users, 1)
-        self.item_biases = nn.Embedding(self.num_items, 1)
+        self.user_biases = torch.nn.Embedding(self.num_users, 1)
+        self.item_biases = torch.nn.Embedding(self.num_items, 1)
 
         self.affine_output = torch.nn.Linear(in_features=self.latent_dim, out_features=1)
         self.logistic = torch.nn.Sigmoid()
