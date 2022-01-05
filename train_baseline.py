@@ -79,8 +79,8 @@ def build(args):
     tgt_vl_generator = TaskGenerator(tgt_valid_ratings, my_id_bank)
     # task_gen_all: contains data for all training markets, index 0 for target market data
     task_gen_all = {
-        0: tgt_task_generator,
-        1: tgt_vl_generator
+        0: tgt_task_generator
+        #1: tgt_vl_generator
     }  
 
     ############
