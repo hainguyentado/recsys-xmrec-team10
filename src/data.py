@@ -187,7 +187,7 @@ class TaskGenerator(object):
     
         neg_samples = open(os.path.join(*dir, 'valid_run.tsv'))
 
-        pos_samples = pd.read_csv('/'+os.path.join(*dir, 'valid_qrel.tsv'), sep='\t')
+        pos_samples = pd.read_csv(os.path.join(*dir, 'valid_qrel.tsv'), sep='\t')
 
         negatives_train = {}
         for line in neg_samples:
