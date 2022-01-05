@@ -2,6 +2,7 @@ import torch
 import pickle
 from utils import *
 from time import time
+from data import TaskGenerator
 
 
 class Model(object):
