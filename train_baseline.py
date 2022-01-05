@@ -74,10 +74,12 @@ def build(args):
     print(f'Loading target market {args.tgt_market}: {tgt_train_data_dir}')
     tgt_task_generator = TaskGenerator(tgt_train_ratings, my_id_bank)
     print('Loaded target data!\n')
-
+    tgt_valid_ratings = pd.read_csv(os.path.join(args.data_dir, args.tgt_market, 'valid_qrel.tsv'), sep='\t')
+    tgt_vl_generator = TaskGenerator(tgt_valid_ratings, my_id_bank)
     # task_gen_all: contains data for all training markets, index 0 for target market data
     task_gen_all = {
         0: tgt_task_generator
+        1: tgt_vl_generator
     }  
 
     ############
