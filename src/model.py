@@ -86,7 +86,7 @@ class Model(object):
                     opt.step()    
                     total_loss += loss.item()
             print('Total Train Loss: ', total_loss, ' Time: ', time()-epoch_time)
-            self.calc_valid_loss(valid_dataloader, loss_func)        
+            #self.calc_valid_loss(valid_dataloader, loss_func)        
             
             #sys.stdout.flush()
             print('-' * 80)
