@@ -101,7 +101,7 @@ class Model(object):
             valid_user_ids, valid_item_ids, valid_targets = test_batch
     
             cur_users = [user.item() for user in valid_user_ids]
-            cur_items = [item.item() for item in validitem_ids]
+            cur_items = [item.item() for item in valid_item_ids]
             
             valid_user_ids = valid_user_ids.to(self.args.device)
             valid_item_ids = valid_item_ids.to(self.args.device)
