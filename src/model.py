@@ -65,6 +65,7 @@ class Model(object):
             train_dataloader.refresh_dataloaders()
             data_lens = [len(train_dataloader[idx]) for idx in range(train_dataloader.num_tasks)]
             iteration_num = max(data_lens)
+            nums_batch = 0
             for iteration in range(iteration_num):
                 for subtask_num in range(train_dataloader.num_tasks): # get one batch from each dataloader
                     cur_train_dataloader = train_dataloader.get_iterator(subtask_num)
@@ -84,7 +85,8 @@ class Model(object):
                     loss.backward()
                     opt.step()    
                     total_loss += loss.item()
-            print('Total Train Loss: ', total_loss, ' Time: ', time()-tr_time)
+                    nums_batch += 1
+            print('Total Train Loss: ', total_loss/nums_batch, ' Time: ', time()-tr_time)
             self.calc_valid_loss(valid_dataloader, loss_func)        
             
             #sys.stdout.flush()
@@ -96,6 +98,7 @@ class Model(object):
     def calc_valid_loss(self, valid_dataloader, loss_func):
         vl_time = time()
         vl_loss = 0
+        nums_batch = 0
         self.model.eval()
         valid_dataloader.refresh_dataloaders()
         data_lens = [len(valid_dataloader[idx]) for idx in range(valid_dataloader.num_tasks)]
@@ -117,8 +120,9 @@ class Model(object):
                     ratings_pred = self.model(valid_user_ids, valid_item_ids)
                     loss = loss_func(ratings_pred.view(-1), valid_targets)
                     vl_loss += loss.item()
+                    nums_batch += 1
             
-        print('Total Valid Loss: ', vl_loss, ' Time: ', time()-vl_time)    
+        print('Total Valid Loss: ', vl_loss/nums_batch, ' Time: ', time()-vl_time)    
         
         
     # produce the ranking of items for users
