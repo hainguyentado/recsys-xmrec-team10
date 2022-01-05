@@ -74,7 +74,8 @@ def build(args):
     print(f'Loading target market {args.tgt_market}: {tgt_train_data_dir}')
     tgt_task_generator = TaskGenerator(tgt_train_ratings, my_id_bank)
     print('Loaded target data!\n')
-    tgt_valid_ratings = pd.read_csv(os.path.join(args.data_dir, args.tgt_market, 'valid_qrel.tsv'), sep='\t')
+    valid_qrel_name = os.path.join(args.data_dir, args.tgt_market)
+    tgt_valid_ratings = pd.read_csv(valid_qrel_name, sep='\t')
     tgt_vl_generator = TaskGenerator(tgt_valid_ratings, my_id_bank)
     # task_gen_all: contains data for all training markets, index 0 for target market data
     task_gen_all = {
@@ -104,7 +105,7 @@ def build(args):
     ############
     ## Validation and Test Run
     ############
-    tgt_valid_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_valid, args.batch_size)
+    tgt_valid_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(valid_qrel_name, args.batch_size)
     #tgt_test_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_test, args.batch_size)
     
     

@@ -19,7 +19,7 @@ class Model(object):
         model_alias = self.args.alias #gmf
         self.config = {'batch_size': self.args.batch_size, #1024,
               'optimizer': 'adam',
-              'tgt_market_valid': self.args.tgt_market_valid, #'DATA/t1/valid_run.tsv'
+              'tgt_market': self.args.tgt_market, #'t1'
               'adam_lr': self.args.lr, #0.005, #1e-3,
               'latent_dim': self.args.latent_dim, #8
               'latent_dim_mlp': self.args.latent_dim_mlp, #8
@@ -53,9 +53,10 @@ class Model(object):
         ## Train
         ############
         self.model.train()
-        tgt_valid_ratings = pd.read_csv(self.config['tgt_market_valid'], sep='\t')
+        valid_qrel_name = os.path.join(self.args.data_dir, self.config['tgt_market'], 'valid_qrel.tsv')
+        tgt_valid_ratings = pd.read_csv(valid_qrel_name, sep='\t')
         tgt_vl_generator = TaskGenerator(tgt_valid_ratings, self.my_id_bank)  
-        valid_dataloader = tgt_vl_generator.instance_a_market_valid_dataloader(self.config['tgt_market_valid'], args.batch_size)
+        valid_dataloader = tgt_vl_generator.instance_a_market_valid_dataloader(valid_qrel_name, args.batch_size)
         for epoch in range(self.args.num_epoch):
             epoch_time = time()
             total_loss = 0
