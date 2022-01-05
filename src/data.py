@@ -179,6 +179,10 @@ class TaskGenerator(object):
 
             # create negative item samples
             self.negatives_train = self._sample_negative(fname)
+            print('hh')
+            print(self.negatives_train)
+            print('jj')
+            print(self.train_ratings)
             self.train_ratings = self.ratings
         
     
