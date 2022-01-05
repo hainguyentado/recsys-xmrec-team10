@@ -73,16 +73,22 @@ def build(args):
 
     print(f'Loading target market {args.tgt_market}: {tgt_train_data_dir}')
     tgt_task_generator = TaskGenerator(tgt_train_ratings, my_id_bank)
+
     print('Loaded target data!\n')
     valid_qrel_name = os.path.join(args.data_dir, args.tgt_market, 'valid_qrel.tsv')
     tgt_valid_ratings = pd.read_csv(valid_qrel_name, sep='\t')
-    #tgt_vl_generator = TaskGenerator(tgt_valid_ratings, my_id_bank)
+    tgt_vl_generator = TaskGenerator(tgt_valid_ratings, my_id_bank)
+    task_valid_all = {
+        0: tgt_vl_generator
+    }
+    valid_tasksets = MetaMarket_Dataset(task_valid_all, num_negatives=args.num_negative, meta_split='train' )
+    valid_dataloader = MetaMarket_DataLoader(valid_tasksets, sample_batch_size=args.batch_size, shuffle=True, num_workers=0)
     # task_gen_all: contains data for all training markets, index 0 for target market data
     task_gen_all = {
         0: tgt_task_generator
         #1: tgt_vl_generator
     }  
-
+    
     ############
     ## Source Market(s) Data
     ############
@@ -106,14 +112,14 @@ def build(args):
     ## Validation and Test Run
     ############
     tgt_valid_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(os.path.join(args.data_dir, args.tgt_market, 'valid_run.tsv'), args.batch_size)
-    #tgt_test_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_test, args.batch_size)
+    tgt_test_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_test, args.batch_size)
     
     
     ############
     ## Model  
     ############
     mymodel = Model(args, my_id_bank)
-    mymodel.fit(train_dataloader)
+    mymodel.fit(train_dataloader, valid_dataloader)
     
     print('Run output files:')
     # validation data prediction

@@ -46,20 +46,20 @@ class Model(object):
         return self.model
     
     
-    def fit(self, train_dataloader): 
+    def fit(self, train_dataloader, valid_dataloader): 
         opt = use_optimizer(self.model, self.config)
         loss_func = torch.nn.BCELoss()
         ############
         ## Train
         ############
         #self.model.train()
-        valid_qrel_name = os.path.join(self.args.data_dir, self.config['tgt_market'], 'valid_qrel.tsv')
-        tgt_valid_ratings = pd.read_csv(valid_qrel_name, sep='\t')
-        tgt_vl_generator = TaskGenerator(None, self.my_id_bank)  
-        valid_dataloader = tgt_vl_generator.instance_a_market_valid_dataloader(valid_qrel_name, self.args.batch_size)
+        #valid_qrel_name = os.path.join(self.args.data_dir, self.config['tgt_market'], 'valid_qrel.tsv')
+        #tgt_valid_ratings = pd.read_csv(valid_qrel_name, sep='\t')
+        #tgt_vl_generator = TaskGenerator(None, self.my_id_bank)  
+        #valid_dataloader = tgt_vl_generator.instance_a_market_valid_dataloader(valid_qrel_name, self.args.batch_size)
         for epoch in range(self.args.num_epoch):
             self.model.train()
-            epoch_time = time()
+            tr_time = time()
             total_loss = 0
             print('Epoch {} starts !'.format(epoch))
             
@@ -86,7 +86,7 @@ class Model(object):
                     loss.backward()
                     opt.step()    
                     total_loss += loss.item()
-            print('Total Train Loss: ', total_loss, ' Time: ', time()-epoch_time)
+            print('Total Train Loss: ', total_loss, ' Time: ', time()-tr_time)
             self.calc_valid_loss(valid_dataloader, loss_func)        
             
             #sys.stdout.flush()
@@ -97,24 +97,26 @@ class Model(object):
 
     def calc_valid_loss(self, valid_dataloader, loss_func):
         vl_time = time()
-        sum_loss = 0
+        vl_loss = 0
         self.model.eval()
-        for test_batch in valid_dataloader:
-            valid_user_ids, valid_item_ids, valid_targets = test_batch
-    
-            cur_users = [user.item() for user in valid_user_ids]
-            cur_items = [item.item() for item in valid_item_ids]
-            
-            valid_user_ids = valid_user_ids.to(self.args.device)
-            valid_item_ids = valid_item_ids.to(self.args.device)
-            valid_targets = valid_targets.to(self.args.device)
-            
+        valid_dataloader.refresh_dataloaders()
+        data_lens = [len(valid_dataloader[idx]) for idx in range(valid_dataloader.num_tasks)]
+        iteration_num = max(data_lens)
+        for iteration in range(iteration_num):
+            for subtask_num in range(valid_dataloader.num_tasks): # get one batch from each dataloader
+                cur_valid_dataloader = valid_dataloader.get_iterator(subtask_num)
+                try:
+                    valid_user_ids, valid_item_ids, valid_targets = next(cur_valid_dataloader)
+                except:
+                    new_valid_iterator = iter(valid_dataloader[subtask_num])
+                    valid_user_ids, valid_item_ids, valid_targets = next(new_valid_iterator)
+                    
             with torch.no_grad():
                 ratings_pred = self.model(valid_user_ids, valid_item_ids)
                 loss = loss_func(ratings_pred.view(-1), valid_targets)
-                sum_loss += loss.item()
-            #opt.zero_grad() 
-        print('Total Valid Loss: ', sum_loss, ' Time: ', time()-vl_time)    
+                vl_loss += loss.item()
+            
+        print('Total Valid Loss: ', vl_loss, ' Time: ', time()-vl_time)    
         
         
     # produce the ranking of items for users
