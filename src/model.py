@@ -18,6 +18,7 @@ class Model(object):
         model_alias = self.args.alias #gmf
         self.config = {'batch_size': self.args.batch_size, #1024,
               'optimizer': 'adam',
+              'tgt_market_valid': self.args.tgt_market_valid, #'DATA/t1/valid_run.tsv'
               'adam_lr': self.args.lr, #0.005, #1e-3,
               'latent_dim': self.args.latent_dim, #8
               'latent_dim_mlp': self.args.latent_dim_mlp, #8
@@ -50,7 +51,10 @@ class Model(object):
         ############
         ## Train
         ############
-        self.model.train()  
+        self.model.train()
+        tgt_valid_ratings = pd.read_csv(self.config['tgt_market_valid'], sep='\t')
+        tgt_vl_generator = TaskGenerator(tgt_valid_ratings, self.my_id_bank)  
+        valid_dataloader = tgt_vl_generator.instance_a_market_valid_dataloader(self.config['tgt_market_valid'], args.batch_size)
         for epoch in range(self.args.num_epoch):
             epoch_time = time()
             total_loss = 0
@@ -79,13 +83,41 @@ class Model(object):
                     loss.backward()
                     opt.step()    
                     total_loss += loss.item()
-            print('Total Loss: ', total_loss, ' Time: ', time()-epoch_time)        
+            print('Total Train Loss: ', total_loss, ' Time: ', time()-epoch_time)
+            self.calc_valid_loss(valid_dataloader, loss_func)        
             
             #sys.stdout.flush()
             print('-' * 80)
         
         print('Model is trained! and saved at:')
         self.save()
+
+    def calc_valid_loss(self, valid_dataloader, loss_func):
+        vl_time = time()
+        total_loss = 0
+        valid_dataloader.refresh_dataloaders()
+        data_lens = [len(valid_dataloader[idx]) for idx in range(valid_dataloader.num_tasks)]
+        iteration_num = max(data_lens)
+        for iteration in range(iteration_num):
+            for subtask_num in range(valid_dataloader.num_tasks): # get one batch from each dataloader
+                cur_valid_dataloader = valid_dataloader.get_iterator(subtask_num)
+                try:
+                    valid_user_ids, valid_item_ids, tvalid_targets = next(cur_valid_dataloader)
+                except:
+                    new_valid_iterator = iter(valid_dataloader[subtask_num])
+                    valid_user_ids, valid_item_ids, valid_targets = next(new_valid_iterator)
+                
+                valid_user_ids = valid_user_ids.to(self.args.device)
+                valid_item_ids = valid_item_ids.to(self.args.device)
+                valid_targets = valid_targets.to(self.args.device)
+            
+                with torch.no_grad():
+                    ratings_pred = self.model(valid_user_ids, valid_item_ids)
+                    loss = loss_func(ratings_pred.view(-1), valid_targets)
+                    total_loss += loss.item()
+                #opt.zero_grad() 
+        print('Total Valid Loss: ', total_loss, ' Time: ', time()-vl_time)    
+        
         
     # produce the ranking of items for users
     def predict(self, eval_dataloader):
