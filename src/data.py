@@ -185,7 +185,7 @@ class TaskGenerator(object):
     def _sample_negative(self, fname):
         dir = fname.split('/')[:-1]
     
-        neg_samples = open('/'+os.path.join(*dir, 'valid_run.tsv')
+        neg_samples = open('/'+os.path.join(*dir, 'valid_run.tsv'))
 
         pos_samples = pd.read_csv('/'+os.path.join(*dir, 'valid_qrel.tsv'), sep='\t')
 
@@ -199,6 +199,7 @@ class TaskGenerator(object):
         pos_samples['itemId'] = pos_samples['itemId'].apply(lambda x: self.id_index_bank.query_item_index(x) )
         for row in pos_samples.itertuples(): 
             negatives_train[row.userId] = negatives_train[row.userId].remove(row.itemId)
+        neg_samples.close()
         return negatives_train
 
         
