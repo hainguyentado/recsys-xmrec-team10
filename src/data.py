@@ -152,7 +152,7 @@ class MarketTask(Dataset):
 class TaskGenerator(object):
     """Construct dataset"""
 
-    def __init__(self, train_data, id_index_bank):
+    def __init__(self, train_data, id_index_bank, fname):
         """
         args:
             train_data: pd.DataFrame, which contains 3 columns = ['userId', 'itemId', 'rating']
@@ -178,20 +178,29 @@ class TaskGenerator(object):
             self.item_pool = set(self.ratings['itemId'].unique())
 
             # create negative item samples
-            self.negatives_train = self._sample_negative(self.ratings)
+            self.negatives_train = self._sample_negative(fname)
             self.train_ratings = self.ratings
         
     
-    def _sample_negative(self, ratings):
-        by_userid_group = self.ratings.groupby("userId")['itemId']
+    def _sample_negative(self, fname):
+        dir = fname.split('/')[:-1]
+    
+        neg_samples = open('/'+os.path.join(*dir, 'valid_run.tsv')
+
+        pos_samples = pd.read_csv('/'+os.path.join(*dir, 'valid_qrel.tsv'), sep='\t')
+
         negatives_train = {}
-        for userid, group_frame in by_userid_group:
-            pos_itemids = set(group_frame.values.tolist())
-            neg_itemids = self.item_pool - pos_itemids
-            neg_itemids_train = neg_itemids
-            negatives_train[userid] = neg_itemids_train
+        for line in neg_samples:
+            linetoks = line.split('\t')
+            neg_user_id = self.id_index_bank.query_user_index(linetoks[0])
+            neg_item_ids = list(map(self.id_index_bank.query_item_index, linetoks[1].strip().split(',')))
+            negatives_train[neg_user_id] = neg_item_ids
+        pos_samples['userId'] = pos_samples['userId'].apply(lambda x: self.id_index_bank.query_user_index(x) )
+        pos_samples['itemId'] = pos_samples['itemId'].apply(lambda x: self.id_index_bank.query_item_index(x) )
+        for row in pos_samples.itertuples(): 
+            negatives_train[row.userId] = negatives_train[row.userId].remove(row.itemId)
         return negatives_train
-                    
+
         
     def instance_a_market_train_task(self, index, num_negatives):
         """instance train task's torch Dataset"""
@@ -200,10 +209,11 @@ class TaskGenerator(object):
         for row in train_ratings.itertuples():
             users.append(int(row.userId))
             items.append(int(row.itemId))
-            if (row.rating > 3.7):
-                ratings.append(1.0)
-            else:
-                ratings.append(0.1)
+            #if (row.rating > 3.7):
+            #    ratings.append(1.0)
+            #else:
+            #    ratings.append(0.1)
+            ratings.append(float(row.rating))
             
             cur_negs = self.negatives_train[int(row.userId)]
             cur_negs = random.sample(cur_negs, min(num_negatives, len(cur_negs)) )

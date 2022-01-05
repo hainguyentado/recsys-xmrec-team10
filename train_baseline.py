@@ -72,16 +72,16 @@ def build(args):
     tgt_train_ratings = pd.read_csv(tgt_train_data_dir, sep='\t')
 
     print(f'Loading target market {args.tgt_market}: {tgt_train_data_dir}')
-    tgt_task_generator = TaskGenerator(tgt_train_ratings, my_id_bank)
+    tgt_task_generator = TaskGenerator(tgt_train_ratings, my_id_bank, tgt_train_data_dir)
 
     print('Loaded target data!\n')
     valid_qrel_name = os.path.join(args.data_dir, args.tgt_market, 'valid_qrel.tsv')
     tgt_valid_ratings = pd.read_csv(valid_qrel_name, sep='\t')
-    tgt_vl_generator = TaskGenerator(tgt_valid_ratings, my_id_bank)
+    tgt_vl_generator = TaskGenerator(tgt_valid_ratings, my_id_bank, valid_qrel_name )
     task_valid_all = {
         0: tgt_vl_generator
     }
-    valid_tasksets = MetaMarket_Dataset(task_valid_all, num_negatives=args.num_negative, meta_split='train' )
+    valid_tasksets = MetaMarket_Dataset(task_valid_all, num_negatives=90 meta_split='train' )
     valid_dataloader = MetaMarket_DataLoader(valid_tasksets, sample_batch_size=args.batch_size, shuffle=True, num_workers=0)
     # task_gen_all: contains data for all training markets, index 0 for target market data
     task_gen_all = {
@@ -100,7 +100,7 @@ def build(args):
             print(f'Loading {cur_src_market}: {cur_src_data_dir}')
             cur_src_train_ratings = pd.read_csv(cur_src_data_dir, sep='\t')
             cur_src_train_ratings.userId = cur_src_train_ratings['userId'].apply(lambda x: args.tgt_market + x[2:])
-            cur_src_task_generator = TaskGenerator(cur_src_train_ratings, my_id_bank)
+            cur_src_task_generator = TaskGenerator(cur_src_train_ratings, my_id_bank, cur_src_data_dir)
             task_gen_all[cur_task_index] = cur_src_task_generator
             cur_task_index+=1
         print('Loaded source data!\n')

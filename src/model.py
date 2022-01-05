@@ -2,7 +2,6 @@ import torch
 import pickle
 from utils import *
 from time import time
-from data import TaskGenerator
 
 
 class Model(object):
@@ -55,8 +54,7 @@ class Model(object):
         #self.model.train()
         #valid_qrel_name = os.path.join(self.args.data_dir, self.config['tgt_market'], 'valid_qrel.tsv')
         #tgt_valid_ratings = pd.read_csv(valid_qrel_name, sep='\t')
-        #tgt_vl_generator = TaskGenerator(None, self.my_id_bank)  
-        #valid_dataloader = tgt_vl_generator.instance_a_market_valid_dataloader(valid_qrel_name, self.args.batch_size)
+         
         for epoch in range(self.args.num_epoch):
             self.model.train()
             tr_time = time()
@@ -316,7 +314,7 @@ class MLP(torch.nn.Module):
         for idx, _ in enumerate(range(len(self.fc_layers))):
             vector = self.fc_layers[idx](vector)
             # Perform ReLU activation
-            vector = torch.nn.ReLU()(vector)
+            vector = torch.nn.ELU()(vector)
             # vector = torch.nn.BatchNorm1d()(vector)
             # vector = torch.nn.Dropout(p=0.5)(vector)
 
