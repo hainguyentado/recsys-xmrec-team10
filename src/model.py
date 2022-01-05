@@ -97,7 +97,7 @@ class Model(object):
     def calc_valid_loss(self, valid_dataloader, loss_func):
         vl_time = time()
         total_loss = 0
-        for test_batch in eval_dataloader:
+        for test_batch in valid_dataloader:
             valid_user_ids, valid_item_ids, valid_targets = test_batch
     
             cur_users = [user.item() for user in valid_user_ids]
