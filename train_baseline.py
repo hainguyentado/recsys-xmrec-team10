@@ -81,7 +81,7 @@ def build(args):
     task_valid_all = {
         0: tgt_vl_generator
     }
-    valid_tasksets = MetaMarket_Dataset(task_valid_all, num_negatives=90 meta_split='train' )
+    valid_tasksets = MetaMarket_Dataset(task_valid_all, num_negatives=90, meta_split='train' )
     valid_dataloader = MetaMarket_DataLoader(valid_tasksets, sample_batch_size=args.batch_size, shuffle=True, num_workers=0)
     # task_gen_all: contains data for all training markets, index 0 for target market data
     task_gen_all = {
