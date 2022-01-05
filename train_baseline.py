@@ -111,8 +111,8 @@ def build(args):
     ############
     ## Validation and Test Run
     ############
-    tgt_valid_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(os.path.join(args.data_dir, args.tgt_market, 'valid_run.tsv'), args.batch_size)
-    tgt_test_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_test, args.batch_size)
+    tgt_valid_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_valid, 'valid_run.tsv'), args.batch_size)
+    #tgt_test_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_test, args.batch_size)
     
     
     ############
