@@ -179,10 +179,6 @@ class TaskGenerator(object):
 
             # create negative item samples
             self.negatives_train = self._sample_negative(fname)
-            print('hh')
-            print(self.negatives_train)
-            print('jj')
-            print(self.train_ratings)
             self.train_ratings = self.ratings
         
     
@@ -202,9 +198,8 @@ class TaskGenerator(object):
         pos_samples['userId'] = pos_samples['userId'].apply(lambda x: self.id_index_bank.query_user_index(x) )
         pos_samples['itemId'] = pos_samples['itemId'].apply(lambda x: self.id_index_bank.query_item_index(x) )
         for row in pos_samples.itertuples(): 
-            negatives_train[int(row.userId)] = negatives_train[int(row.userId)].remove(row.itemId)
+            negatives_train[int(row.userId)].remove(row.itemId)
         neg_samples.close()
-        print(negatives_train)
         return negatives_train
 
         
