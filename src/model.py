@@ -52,12 +52,13 @@ class Model(object):
         ############
         ## Train
         ############
-        self.model.train()
+        #self.model.train()
         valid_qrel_name = os.path.join(self.args.data_dir, self.config['tgt_market'], 'valid_qrel.tsv')
         tgt_valid_ratings = pd.read_csv(valid_qrel_name, sep='\t')
         tgt_vl_generator = TaskGenerator(tgt_valid_ratings, self.my_id_bank)  
         valid_dataloader = tgt_vl_generator.instance_a_market_valid_dataloader(valid_qrel_name, self.args.batch_size)
         for epoch in range(self.args.num_epoch):
+            self.model.train()
             epoch_time = time()
             total_loss = 0
             print('Epoch {} starts !'.format(epoch))
@@ -96,7 +97,8 @@ class Model(object):
 
     def calc_valid_loss(self, valid_dataloader, loss_func):
         vl_time = time()
-        total_loss = 0
+        sum_loss = 0
+        self.model.eval()
         for test_batch in valid_dataloader:
             valid_user_ids, valid_item_ids, valid_targets = test_batch
     
@@ -110,9 +112,9 @@ class Model(object):
             with torch.no_grad():
                 ratings_pred = self.model(valid_user_ids, valid_item_ids)
                 loss = loss_func(ratings_pred.view(-1), valid_targets)
-                total_loss += loss.item()
+                sum_loss += loss.item()
             #opt.zero_grad() 
-        print('Total Valid Loss: ', total_loss, ' Time: ', time()-vl_time)    
+        print('Total Valid Loss: ', sum_loss, ' Time: ', time()-vl_time)    
         
         
     # produce the ranking of items for users
