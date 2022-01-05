@@ -194,12 +194,13 @@ class TaskGenerator(object):
             linetoks = line.split('\t')
             neg_user_id = self.id_index_bank.query_user_index(linetoks[0])
             neg_item_ids = list(map(self.id_index_bank.query_item_index, linetoks[1].strip().split(',')))
-            negatives_train[neg_user_id] = neg_item_ids
+            negatives_train[int(neg_user_id)] = neg_item_ids
         pos_samples['userId'] = pos_samples['userId'].apply(lambda x: self.id_index_bank.query_user_index(x) )
         pos_samples['itemId'] = pos_samples['itemId'].apply(lambda x: self.id_index_bank.query_item_index(x) )
         for row in pos_samples.itertuples(): 
-            negatives_train[row.userId] = negatives_train[row.userId].remove(row.itemId)
+            negatives_train[int(row.userId)] = negatives_train[int(row.userId)].remove(row.itemId)
         neg_samples.close()
+        print(negatives_train)
         return negatives_train
 
         
