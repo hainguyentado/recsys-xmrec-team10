@@ -97,7 +97,6 @@ class Model(object):
     def calc_valid_loss(self, valid_dataloader, loss_func):
         vl_time = time()
         total_loss = 0
-        valid_dataloader.refresh_dataloaders()
         data_lens = [len(valid_dataloader[idx]) for idx in range(valid_dataloader.num_tasks)]
         iteration_num = max(data_lens)
         for iteration in range(iteration_num):
