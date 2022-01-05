@@ -185,7 +185,7 @@ class TaskGenerator(object):
     def _sample_negative(self, fname):
         dir = fname.split('/')[:-1]
     
-        neg_samples = open('/'+os.path.join(*dir, 'valid_run.tsv'))
+        neg_samples = open(os.path.join(*dir, 'valid_run.tsv'))
 
         pos_samples = pd.read_csv('/'+os.path.join(*dir, 'valid_qrel.tsv'), sep='\t')
 
