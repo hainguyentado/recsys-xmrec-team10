@@ -110,11 +110,15 @@ class Model(object):
                 except:
                     new_valid_iterator = iter(valid_dataloader[subtask_num])
                     valid_user_ids, valid_item_ids, valid_targets = next(new_valid_iterator)
-                    
-            with torch.no_grad():
-                ratings_pred = self.model(valid_user_ids, valid_item_ids)
-                loss = loss_func(ratings_pred.view(-1), valid_targets)
-                vl_loss += loss.item()
+
+                valid_user_ids = valid_user_ids.to(self.args.device)
+                valid_item_ids = valid_item_ids.to(self.args.device)
+                valid_targets = valid_targets.to(self.args.device)
+
+                with torch.no_grad():
+                    ratings_pred = self.model(valid_user_ids, valid_item_ids)
+                    loss = loss_func(ratings_pred.view(-1), valid_targets)
+                    vl_loss += loss.item()
             
         print('Total Valid Loss: ', vl_loss, ' Time: ', time()-vl_time)    
         
