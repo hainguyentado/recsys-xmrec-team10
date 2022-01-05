@@ -97,26 +97,21 @@ class Model(object):
     def calc_valid_loss(self, valid_dataloader, loss_func):
         vl_time = time()
         total_loss = 0
-        data_lens = [len(valid_dataloader[idx]) for idx in range(valid_dataloader.num_tasks)]
-        iteration_num = max(data_lens)
-        for iteration in range(iteration_num):
-            for subtask_num in range(valid_dataloader.num_tasks): # get one batch from each dataloader
-                cur_valid_dataloader = valid_dataloader.get_iterator(subtask_num)
-                try:
-                    valid_user_ids, valid_item_ids, tvalid_targets = next(cur_valid_dataloader)
-                except:
-                    new_valid_iterator = iter(valid_dataloader[subtask_num])
-                    valid_user_ids, valid_item_ids, valid_targets = next(new_valid_iterator)
-                
-                valid_user_ids = valid_user_ids.to(self.args.device)
-                valid_item_ids = valid_item_ids.to(self.args.device)
-                valid_targets = valid_targets.to(self.args.device)
+        for test_batch in eval_dataloader:
+            valid_user_ids, valid_item_ids, valid_targets = test_batch
+    
+            cur_users = [user.item() for user in valid_user_ids]
+            cur_items = [item.item() for item in validitem_ids]
             
-                with torch.no_grad():
-                    ratings_pred = self.model(valid_user_ids, valid_item_ids)
-                    loss = loss_func(ratings_pred.view(-1), valid_targets)
-                    total_loss += loss.item()
-                #opt.zero_grad() 
+            valid_user_ids = valid_user_ids.to(self.args.device)
+            valid_item_ids = valid_item_ids.to(self.args.device)
+            valid_targets = valid_targets.to(self.args.device)
+            
+            with torch.no_grad():
+                ratings_pred = self.model(valid_user_ids, valid_item_ids)
+                loss = loss_func(ratings_pred.view(-1), valid_targets)
+                total_loss += loss.item()
+            #opt.zero_grad() 
         print('Total Valid Loss: ', total_loss, ' Time: ', time()-vl_time)    
         
         
