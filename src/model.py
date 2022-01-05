@@ -55,7 +55,7 @@ class Model(object):
         #self.model.train()
         valid_qrel_name = os.path.join(self.args.data_dir, self.config['tgt_market'], 'valid_qrel.tsv')
         tgt_valid_ratings = pd.read_csv(valid_qrel_name, sep='\t')
-        tgt_vl_generator = TaskGenerator(tgt_valid_ratings, self.my_id_bank)  
+        tgt_vl_generator = TaskGenerator(None, self.my_id_bank)  
         valid_dataloader = tgt_vl_generator.instance_a_market_valid_dataloader(valid_qrel_name, self.args.batch_size)
         for epoch in range(self.args.num_epoch):
             self.model.train()
