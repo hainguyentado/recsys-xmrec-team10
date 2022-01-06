@@ -17,7 +17,7 @@ class Model(object):
             return None
         model_alias = self.args.alias #gmf
         self.config = {'batch_size': self.args.batch_size, #1024,
-              'optimizer': self.optimizer,
+              'optimizer': self.args.optimizer,
               'tgt_market': self.args.tgt_market, #'t1'
               'adam_lr': self.args.lr, #0.005, #1e-3,
               'latent_dim': self.args.latent_dim, #8
