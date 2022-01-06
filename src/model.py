@@ -17,7 +17,7 @@ class Model(object):
             return None
         model_alias = self.args.alias #gmf
         self.config = {'batch_size': self.args.batch_size, #1024,
-              'optimizer': 'adam',
+              'optimizer': self.optimizer,
               'tgt_market': self.args.tgt_market, #'t1'
               'adam_lr': self.args.lr, #0.005, #1e-3,
               'latent_dim': self.args.latent_dim, #8
@@ -154,7 +154,7 @@ class Model(object):
         print('Predict time: ', time() - stime)
         return task_run_mf
     
-    ## SAVE the model and idbank
+    ## SAVE the model and (idbank,args config)
     def save(self):
         if self.config['save_trained']:
             model_dir = f'checkpoints/{self.args.tgt_market}_{self.args.src_markets}_{self.args.exp_name}.model'
@@ -163,7 +163,7 @@ class Model(object):
             print(f'--id_bank: {cid_filename}')
             torch.save(self.model.state_dict(), model_dir)
             with open(cid_filename, 'wb') as centralid_file:
-                pickle.dump(self.my_id_bank, centralid_file)
+                pickle.dump((self.my_id_bank, self.args), centralid_file)
     
     ## LOAD the model and idbank
     def load(self, checkpoint_dir):

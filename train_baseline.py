@@ -25,7 +25,7 @@ def create_arg_parser():
     parser.add_argument('--data_dir', help='dataset directory', type=str, default='DATA/')
     parser.add_argument('--tgt_market', help='specify a target market name', type=str, default='t1') 
     parser.add_argument('--src_markets', help='specify none ("none") or a few source markets ("-" seperated) to augment the data for training', type=str, default='s1-s2') 
-    
+    parser.add_argument('--use_qrel', help='merge the valid_qrel into the train dataset, use when final submit', type=bool, default=False)
     parser.add_argument('--tgt_market_valid', help='specify validation run file for target market', type=str, default='DATA/t1/valid_run.tsv')
     parser.add_argument('--tgt_market_test', help='specify test run file for target market', type=str, default='DATA/t1/test_run.tsv') 
     
@@ -39,7 +39,8 @@ def create_arg_parser():
     parser.add_argument('--num_epoch', type=int, default=25, help='number of epoches')
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size')
     parser.add_argument('--lr', type=float, default=0.005, help='learning rate')
-    parser.add_argument('--l2_reg', type=float, default=1e-07, help='learning rate')
+    parser.add_argument('--l2_reg', type=float, default=1e-07, help='l2 regularization')
+    parser.add_argument('--optimizer', type=str, default='adam', help='optimizer')
     parser.add_argument('--latent_dim', type=int, default=8, help='latent dimensions')
     parser.add_argument('--latent_dim_mlp', type=int, default=8, help='latent dimensions for mlp model')
     parser.add_argument('--num_negative', type=int, default=4, help='num of negative samples during training')
@@ -72,12 +73,12 @@ def build(args):
     tgt_train_ratings = pd.read_csv(tgt_train_data_dir, sep='\t')
 
     print(f'Loading target market {args.tgt_market}: {tgt_train_data_dir}')
-    tgt_task_generator = TaskGenerator(tgt_train_ratings, my_id_bank, tgt_train_data_dir)
+    tgt_task_generator = TaskGenerator(my_id_bank, tgt_train_data_dir, use_qrel=args.use_qrel)
 
     print('Loaded target data!\n')
     valid_qrel_name = os.path.join(args.data_dir, args.tgt_market, 'valid_qrel.tsv')
     tgt_valid_ratings = pd.read_csv(valid_qrel_name, sep='\t')
-    tgt_vl_generator = TaskGenerator(tgt_valid_ratings, my_id_bank, valid_qrel_name )
+    tgt_vl_generator = TaskGenerator(my_id_bank, valid_qrel_name)
     task_valid_all = {
         0: tgt_vl_generator
     }
@@ -85,8 +86,7 @@ def build(args):
     valid_dataloader = MetaMarket_DataLoader(valid_tasksets, sample_batch_size=args.batch_size, shuffle=True, num_workers=0)
     # task_gen_all: contains data for all training markets, index 0 for target market data
     task_gen_all = {
-        0: tgt_task_generator,
-        1: tgt_vl_generator
+        0: tgt_task_generator
     }  
     
     ############
@@ -98,9 +98,7 @@ def build(args):
         for cur_src_market in src_market_list:
             cur_src_data_dir = os.path.join(args.data_dir, cur_src_market, train_file_names)
             print(f'Loading {cur_src_market}: {cur_src_data_dir}')
-            cur_src_train_ratings = pd.read_csv(cur_src_data_dir, sep='\t')
-            cur_src_train_ratings.userId = cur_src_train_ratings['userId'].apply(lambda x: args.tgt_market + x[2:])
-            cur_src_task_generator = TaskGenerator(cur_src_train_ratings, my_id_bank, cur_src_data_dir)
+            cur_src_task_generator = TaskGenerator(my_id_bank, cur_src_data_dir,rename=args.tgt_market, use_qrel=args.use_qrel)
             task_gen_all[cur_task_index] = cur_src_task_generator
             cur_task_index+=1
         print('Loaded source data!\n')
@@ -143,5 +141,8 @@ def build(args):
     for score_name in ['ndcg_cut_10', 'recall_10', 'P_10', 'map_cut_10']:
         print("======= Set val : score(" + score_name + ")=%0.12f =======" % task_ov_val[score_name])
     print('===============\nExperiment finished successfully!')
-#if __name__=="__main__":
-#   main()
+    return (mymodel, my_id_bank)
+if __name__=="__main__":
+    parser = create_arg_parser()
+    args = parser.parse_args()
+    build(args)

@@ -152,7 +152,7 @@ class MarketTask(Dataset):
 class TaskGenerator(object):
     """Construct dataset"""
 
-    def __init__(self, train_data, id_index_bank, fname):
+    def __init__(self, id_index_bank, fname=None, rename=None, use_qrel=False):
         """
         args:
             train_data: pd.DataFrame, which contains 3 columns = ['userId', 'itemId', 'rating']
@@ -162,8 +162,16 @@ class TaskGenerator(object):
         self.id_index_bank = id_index_bank
         
         # None for evaluation purposes
-        if train_data is not None: 
-            self.ratings = train_data
+        if fname is not None: 
+            self.dir = fname.split('/')[:-1]
+            self.ratings = pd.read_csv(fname, sep='\t')
+            
+            if use_qrel:
+                qrel_ratings = pd.read_csv(os.path.join(*self.dir, 'valid_qrel.tsv'), sep='\t')
+                self.ratings = pd.concat([self.ratings, qrel_ratings])
+                self.ratings.drop_duplicates(inplace=True)
+            if rename is not None:
+                self.ratings.userId = self.ratings['userId'].apply(lambda x: rename + x[2:])
 
             # get item and user pools
             self.user_pool_ids = set(self.ratings['userId'].unique())
@@ -182,12 +190,9 @@ class TaskGenerator(object):
             self.train_ratings = self.ratings
         
     
-    def _sample_negative(self, fname):
-        dir = fname.split('/')[:-1]
-    
-        neg_samples = open(os.path.join(*dir, 'valid_run.tsv'))
-
-        pos_samples = pd.read_csv(os.path.join(*dir, 'valid_qrel.tsv'), sep='\t')
+    def _sample_negative(self):
+        neg_samples = open(os.path.join(*self.dir, 'valid_run.tsv'))
+        pos_samples = pd.read_csv(os.path.join(*self.dir, 'valid_qrel.tsv'), sep='\t')
 
         negatives_train = {}
         for line in neg_samples:
