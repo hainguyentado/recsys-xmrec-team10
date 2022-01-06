@@ -186,14 +186,14 @@ class TaskGenerator(object):
             self.item_pool = set(self.ratings['itemId'].unique())
 
             # create negative item samples
-            self.negatives_train = self._sample_negative()
+            self.negatives_train = self._sample_negative2()
             self.train_ratings = self.ratings
         
     
-    def _sample_negative(self):
+    def _sample_negative(self): # sample ngẫu nhiên negative trong tập 99valid_run  ---> better
         neg_samples = open(os.path.join(*self.dir, 'valid_run.tsv'))
         pos_samples = pd.read_csv(os.path.join(*self.dir, 'valid_qrel.tsv'), sep='\t')
-
+        # bỏ các sample positive ra khỏi các simple negative từ tập 100valid_run
         negatives_train = {}
         for line in neg_samples:
             linetoks = line.split('\t')
@@ -207,6 +207,15 @@ class TaskGenerator(object):
         neg_samples.close()
         return negatives_train
 
+    def _sample_negative2(self, ratings): # sample ngẫu nhiên negative từ tập train
+        by_userid_group = self.ratings.groupby("userId")['itemId']
+        negatives_train = {}
+        for userid, group_frame in by_userid_group:
+            pos_itemids = set(group_frame.values.tolist())
+            neg_itemids = self.item_pool - pos_itemids
+            neg_itemids_train = neg_itemids
+            negatives_train[userid] = neg_itemids_train
+        return negatives_train
         
     def instance_a_market_train_task(self, index, num_negatives):
         """instance train task's torch Dataset"""
