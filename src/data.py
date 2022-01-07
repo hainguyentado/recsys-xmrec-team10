@@ -168,6 +168,7 @@ class TaskGenerator(object):
             
             if use_qrel:
                 qrel_ratings = pd.read_csv(os.path.join(*self.dir, 'valid_qrel.tsv'), sep='\t')
+                qrel_ratings['rating'] = qrel_ratings['rating'].astype(float)
                 self.ratings = pd.concat([self.ratings, qrel_ratings])
                 self.ratings.drop_duplicates(inplace=True)
             if rename is not None:
