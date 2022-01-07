@@ -119,7 +119,7 @@ def build(args):
     ############
     mymodel = Model(args, my_id_bank)
     if args.pretrain is not None:
-        mymodel.load(pretrain)
+        mymodel.load(args.pretrain)
     mymodel.fit(train_dataloader, valid_dataloader)
     
     print('Run output files:')
