@@ -237,7 +237,7 @@ class TaskGenerator(object):
                 users.append(int(row.userId))
                 items.append(int(neg))
                 #ratings.append(float(0))  # negative samples get 0 rating
-                ratings.append(random.uniform(0,0.2)) # get uniform random
+                ratings.append(random.triangular(0,0.3,0.09)) # get triangular random
 
         dataset = MarketTask(index, user_tensor=torch.LongTensor(users),
                                         item_tensor=torch.LongTensor(items),
