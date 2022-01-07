@@ -36,6 +36,7 @@ def create_arg_parser():
     
     # MODEL arguments 
     parser.add_argument('--alias', type=str, default='gmf', help='type of model used to train' )
+    parser.add_argument('--pretrain', type=str, default=None, help='load pretrain model')
     parser.add_argument('--num_epoch', type=int, default=25, help='number of epoches')
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size')
     parser.add_argument('--lr', type=float, default=0.005, help='learning rate')
@@ -117,6 +118,8 @@ def build(args):
     ## Model  
     ############
     mymodel = Model(args, my_id_bank)
+    if args.pretrain is not None:
+        mymodel.load(pretrain)
     mymodel.fit(train_dataloader, valid_dataloader)
     
     print('Run output files:')
