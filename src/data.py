@@ -54,7 +54,7 @@ class MetaMarket_DataLoader(object):
     """Data Loader for a few markets, samples task and returns the dataloader for that market"""
     
     def __init__(self, task_list, sample_batch_size, task_batch_size=2, shuffle=True, num_workers=0, collate_fn=None,
-                 pin_memory=False, drop_last=False, timeout=0, worker_init_fn=None):
+                 pin_memory=True, drop_last=False, timeout=0, worker_init_fn=None):
         
         self.num_tasks = len(task_list)
         self.task_list = task_list
@@ -73,7 +73,7 @@ class MetaMarket_DataLoader(object):
     
     def refresh_dataloaders(self):
         self.task_list_loaders = {
-            idx:DataLoader(self.task_list[idx], batch_size=self.sample_batch_size, shuffle=self.shuffle, num_workers=self.num_workers, pin_memory=False) \
+            idx:DataLoader(self.task_list[idx], batch_size=self.sample_batch_size, shuffle=self.shuffle, num_workers=self.num_workers, pin_memory=True) \
             for idx in range(len(self.task_list))
         }
         self.task_list_iters = {
@@ -282,6 +282,6 @@ class TaskGenerator(object):
     def instance_a_market_valid_dataloader(self, valid_run_file, sample_batch_size, shuffle=False, num_workers=0):
         """instance target market's validation data torch Dataloader"""
         dataset = self.load_market_valid_run(valid_run_file)
-        return DataLoader(dataset, batch_size=sample_batch_size, shuffle=shuffle, num_workers=num_workers)
+        return DataLoader(dataset, batch_size=sample_batch_size, shuffle=shuffle, num_workers=num_workers, pin_memory=True)
 
     
