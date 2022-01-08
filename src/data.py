@@ -191,7 +191,7 @@ class TaskGenerator(object):
             self.train_ratings = self.ratings
         
     
-    def _sample_negative(self): # sample ngẫu nhiên negative trong tập 99valid_run  ---> better
+    def _sample_negative(self): # sample ngẫu nhiên negative trong tập 99valid_run  ---> better (just in valid)
         neg_samples = open(os.path.join(*self.dir, 'valid_run.tsv'))
         pos_samples = pd.read_csv(os.path.join(*self.dir, 'valid_qrel.tsv'), sep='\t')
         # bỏ các sample positive ra khỏi các simple negative từ tập 100valid_run
@@ -209,11 +209,19 @@ class TaskGenerator(object):
         return negatives_train
 
     def _sample_negative2(self): # sample ngẫu nhiên negative từ tập train
-        by_userid_group = self.ratings.groupby("userId")['itemId']
+        neg_test = open(os.path.join(*self.dir, 'valid_run.tsv'))
+        pos_valid = pd.read_csv(os.path.join(*self.dir, 'valid_qrel.tsv'), sep='\t')
         negatives_train = {}
+        for line in neg_test:
+            linetoks = line.split('\t')
+            user_id = self.id_index_bank.query_user_index(linetoks[0])
+            neg_item_ids = set(map(self.id_index_bank.query_item_index, linetoks[1].strip().split(',')))
+            negatives_train[user_id] = neg_item_ids
+
+        by_userid_group = self.ratings.groupby("userId")['itemId']
         for userid, group_frame in by_userid_group:
             pos_itemids = set(group_frame.values.tolist())
-            neg_itemids = self.item_pool - pos_itemids
+            neg_itemids = self.item_pool - pos_itemids - negatives_train[userid]
             neg_itemids_train = neg_itemids
             negatives_train[userid] = neg_itemids_train
         return negatives_train
@@ -236,8 +244,8 @@ class TaskGenerator(object):
             for neg in cur_negs:
                 users.append(int(row.userId))
                 items.append(int(neg))
-                #ratings.append(float(0))  # negative samples get 0 rating
-                ratings.append(random.triangular(0,0.3,0.09)) # get triangular random
+                ratings.append(float(0))  # negative samples get 0 rating
+                #ratings.append(random.triangular(0,0.3,0.09)) # get triangular random
 
         dataset = MarketTask(index, user_tensor=torch.LongTensor(users),
                                         item_tensor=torch.LongTensor(items),

@@ -122,7 +122,7 @@ class Model(object):
                     vl_loss += loss.item()
                     nums_batch += 1
             
-        print('Total Valid Loss: ', 10*vl_loss/nums_batch, ' Time: ', time()-vl_time)    
+        print('Total Valid Loss: ', vl_loss/nums_batch, ' Time: ', time()-vl_time)    
         
         
     # produce the ranking of items for users
