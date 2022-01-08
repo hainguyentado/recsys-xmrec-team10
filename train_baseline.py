@@ -32,7 +32,7 @@ def create_arg_parser():
     parser.add_argument('--exp_name', help='name the experiment',type=str, default='baseline_toy')
     
     parser.add_argument('--train_data_file', help='the file name of the train data',type=str, default='train_5core.tsv') #'train.tsv' for the original data loading
-    
+    parser.add_argument('-- fastmode', help='True if you don\'t want to predict the test set, only valid set', type=bool, default=True)
     
     # MODEL arguments 
     parser.add_argument('--alias', type=str, default='gmf', help='type of model used to train' )
@@ -83,7 +83,7 @@ def build(args):
     task_valid_all = {
         0: tgt_vl_generator
     }
-    valid_tasksets = MetaMarket_Dataset(task_valid_all, num_negatives=80, meta_split='train' )
+    valid_tasksets = MetaMarket_Dataset(task_valid_all, num_negatives=50, meta_split='train' )
     valid_dataloader = MetaMarket_DataLoader(valid_tasksets, sample_batch_size=args.batch_size, shuffle=True, num_workers=0)
     # task_gen_all: contains data for all training markets, index 0 for target market data
     task_gen_all = {
@@ -107,12 +107,6 @@ def build(args):
     train_tasksets = MetaMarket_Dataset(task_gen_all, num_negatives=args.num_negative, meta_split='train' )
     train_dataloader = MetaMarket_DataLoader(train_tasksets, sample_batch_size=args.batch_size, shuffle=True, num_workers=0)
 
-    ############
-    ## Validation and Test Run
-    ############
-    tgt_valid_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_valid, args.batch_size)
-    tgt_test_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_test, args.batch_size)
-    
     
     ############
     ## Model  
@@ -122,27 +116,33 @@ def build(args):
         mymodel.load(args.pretrain)
     mymodel.fit(train_dataloader, valid_dataloader)
     
+    ############
+    ## Validation and Test Run
+    ############
+    tgt_valid_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_valid, args.batch_size)
+    if args.fastmode == False:
+        tgt_test_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_test, args.batch_size)
     print('Run output files:')
     # validation data prediction
     valid_run_mf = mymodel.predict(tgt_valid_dataloader)
     valid_output_file = os.path.join('baseline_outputs', args.exp_name, args.tgt_market, 'valid_pred.tsv')
     print(f'--validation: {valid_output_file}')
     write_run_file(valid_run_mf, valid_output_file)
-    
-    # test data prediction
-    test_run_mf = mymodel.predict(tgt_test_dataloader)
-    test_output_file = os.path.join('baseline_outputs', args.exp_name, args.tgt_market, 'test_pred.tsv')
-    print(f'--test: {test_output_file}')
-    write_run_file(test_run_mf, test_output_file)
+    if args.fastmode == False:
+        # test data prediction
+        test_run_mf = mymodel.predict(tgt_test_dataloader)
+        test_output_file = os.path.join('baseline_outputs', args.exp_name, args.tgt_market, 'test_pred.tsv')
+        print(f'--test: {test_output_file}')
+        write_run_file(test_run_mf, test_output_file)
     
     # print evaluation
     print('Evaluating the validation set\n ')
     valid_qrel_mf = read_qrel_file(os.path.join('DATA', args.tgt_market, 'valid_qrel.tsv'))
     task_ov_val, _ = get_evaluations_final(valid_run_mf, valid_qrel_mf)
-    for score_name in ['ndcg_cut_10', 'recall_10', 'P_10', 'map_cut_10']:
+    for score_name in ['ndcg_cut_10', 'recall_10']:
         print("======= Set val : score(" + score_name + ")=%0.12f =======" % task_ov_val[score_name])
     print('===============\nExperiment finished successfully!')
-    return (mymodel, my_id_bank)
+    return task_ov_val['ndcg_cut_10']
 if __name__=="__main__":
     parser = create_arg_parser()
     args = parser.parse_args()
