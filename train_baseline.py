@@ -79,11 +79,11 @@ def build(args):
     print('Loaded target data!\n')
     valid_qrel_name = os.path.join(args.data_dir, args.tgt_market, 'valid_qrel.tsv')
     tgt_valid_ratings = pd.read_csv(valid_qrel_name, sep='\t')
-    tgt_vl_generator = TaskGenerator(my_id_bank, valid_qrel_name)
+    tgt_vl_generator = TaskGenerator(my_id_bank, valid_qrel_name, valid = True)
     task_valid_all = {
         0: tgt_vl_generator
     }
-    valid_tasksets = MetaMarket_Dataset(task_valid_all, num_negatives=0, meta_split='train' )
+    valid_tasksets = MetaMarket_Dataset(task_valid_all, num_negatives=80, meta_split='train' )
     valid_dataloader = MetaMarket_DataLoader(valid_tasksets, sample_batch_size=args.batch_size, shuffle=True, num_workers=0)
     # task_gen_all: contains data for all training markets, index 0 for target market data
     task_gen_all = {

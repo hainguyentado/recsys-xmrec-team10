@@ -152,7 +152,7 @@ class MarketTask(Dataset):
 class TaskGenerator(object):
     """Construct dataset"""
 
-    def __init__(self, id_index_bank, fname=None, rename=None, use_qrel=False):
+    def __init__(self, id_index_bank, fname=None, rename=None, use_qrel=False, valid = False):
         """
         args:
             train_data: pd.DataFrame, which contains 3 columns = ['userId', 'itemId', 'rating']
@@ -160,7 +160,7 @@ class TaskGenerator(object):
         """
 
         self.id_index_bank = id_index_bank
-        
+        self.valid = valid
         # None for evaluation purposes
         if fname is not None: 
             self.dir = fname.split('/')[:-1]
@@ -245,7 +245,10 @@ class TaskGenerator(object):
                 users.append(int(row.userId))
                 items.append(int(neg))
                 #ratings.append(float(0))  # negative samples get 0 rating
-                ratings.append(random.triangular(0,0.3,0.09)) # get triangular random
+                if self.valid:
+                    ratings.append(0.5)
+                else:
+                    ratings.append(random.triangular(0,0.3,0.09)) # get triangular random
 
         dataset = MarketTask(index, user_tensor=torch.LongTensor(users),
                                         item_tensor=torch.LongTensor(items),

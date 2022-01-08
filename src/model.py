@@ -119,7 +119,7 @@ class Model(object):
                 with torch.no_grad():
                     ratings_pred = self.model(valid_user_ids, valid_item_ids)
                     loss = loss_func(ratings_pred.view(-1), valid_targets)
-                    vl_loss += loss.item()
+                    vl_loss += loss.item() - torch.sum(torch.log(valid_targets))
                     nums_batch += 1
             
         print('Total Valid Loss: ', vl_loss/nums_batch, ' Time: ', time()-vl_time)    
