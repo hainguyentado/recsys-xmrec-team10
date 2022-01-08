@@ -248,7 +248,7 @@ class TaskGenerator(object):
                 if self.valid:
                     ratings.append(0.5)
                 else:
-                    ratings.append(random.triangular(0,0.3,0.09)) # get triangular random
+                    ratings.append(random.triangular(0,0.4,0.1)) # get triangular random
 
         dataset = MarketTask(index, user_tensor=torch.LongTensor(users),
                                         item_tensor=torch.LongTensor(items),
