@@ -63,8 +63,8 @@ class Model(object):
             
             # train the model for some certain iterations
             #train_dataloader.refresh_dataloaders()
-            train_tasksets = MetaMarket_Dataset(task_gen_all, num_negatives=args.num_negative, meta_split='train' )
-            train_dataloader = MetaMarket_DataLoader(train_tasksets, sample_batch_size=args.batch_size, shuffle=True, num_workers=0)
+            train_tasksets = MetaMarket_Dataset(task_gen_all, num_negatives=self.args.num_negative, meta_split='train' )
+            train_dataloader = MetaMarket_DataLoader(train_tasksets, sample_batch_size=self.args.batch_size, shuffle=True, num_workers=0)
             data_lens = [len(train_dataloader[idx]) for idx in range(train_dataloader.num_tasks)]
             iteration_num = max(data_lens)
             nums_batch = 0
