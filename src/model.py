@@ -2,7 +2,7 @@ import torch
 import pickle
 from utils import *
 from time import time
-
+from data import *
 
 class Model(object):
     def __init__(self, args, my_id_bank):
