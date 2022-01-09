@@ -227,14 +227,14 @@ class TaskGenerator(object):
         return negatives_train
         
         def _sample_negative0(self, ratings):
-        by_userid_group = self.ratings.groupby("userId")['itemId']
-        negatives_train = {}
-        for userid, group_frame in by_userid_group:
-            pos_itemids = set(group_frame.values.tolist())
-            neg_itemids = self.item_pool - pos_itemids
-            neg_itemids_train = neg_itemids
-            negatives_train[userid] = neg_itemids_train
-        return negatives_train
+            by_userid_group = self.ratings.groupby("userId")['itemId']
+            negatives_train = {}
+            for userid, group_frame in by_userid_group:
+                pos_itemids = set(group_frame.values.tolist())
+                neg_itemids = self.item_pool - pos_itemids
+                neg_itemids_train = neg_itemids
+                negatives_train[userid] = neg_itemids_train
+            return negatives_train
 
     def instance_a_market_train_task(self, index, num_negatives):
         """instance train task's torch Dataset"""
