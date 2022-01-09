@@ -44,8 +44,8 @@ class Model(object):
         print(self.model)
         return self.model
     
-    
-    def fit(self, train_dataloader, valid_dataloader): 
+    def fit(self, task_gen_all, valid_dataloader):
+    #def fit(self, train_dataloader, valid_dataloader): 
         opt = use_optimizer(self.model, self.config)
         loss_func = torch.nn.MSELoss()
         ############
@@ -62,7 +62,9 @@ class Model(object):
             print('Epoch {} starts !'.format(epoch))
             
             # train the model for some certain iterations
-            train_dataloader.refresh_dataloaders()
+            #train_dataloader.refresh_dataloaders()
+            train_tasksets = MetaMarket_Dataset(task_gen_all, num_negatives=args.num_negative, meta_split='train' )
+            train_dataloader = MetaMarket_DataLoader(train_tasksets, sample_batch_size=args.batch_size, shuffle=True, num_workers=0)
             data_lens = [len(train_dataloader[idx]) for idx in range(train_dataloader.num_tasks)]
             iteration_num = max(data_lens)
             nums_batch = 0

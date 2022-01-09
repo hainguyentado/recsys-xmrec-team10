@@ -104,8 +104,8 @@ def build(args):
             cur_task_index+=1
         print('Loaded source data!\n')
 
-    train_tasksets = MetaMarket_Dataset(task_gen_all, num_negatives=args.num_negative, meta_split='train' )
-    train_dataloader = MetaMarket_DataLoader(train_tasksets, sample_batch_size=args.batch_size, shuffle=True, num_workers=0)
+    #train_tasksets = MetaMarket_Dataset(task_gen_all, num_negatives=args.num_negative, meta_split='train' )
+    #train_dataloader = MetaMarket_DataLoader(train_tasksets, sample_batch_size=args.batch_size, shuffle=True, num_workers=0)
 
     
     ############
@@ -114,8 +114,8 @@ def build(args):
     mymodel = Model(args, my_id_bank)
     if args.pretrain is not None:
         mymodel.load(args.pretrain)
-    mymodel.fit(train_dataloader, valid_dataloader)
-    
+    #mymodel.fit(train_dataloader, valid_dataloader)
+    mymodel.fit(task_gen_all, valid_dataloader)
     ############
     ## Validation and Test Run
     ############
