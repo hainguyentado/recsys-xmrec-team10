@@ -104,9 +104,10 @@ def build(args):
             cur_task_index+=1
         print('Loaded source data!\n')
 
-    #train_tasksets = MetaMarket_Dataset(task_gen_all, num_negatives=args.num_negative, meta_split='train' )
-    #train_dataloader = MetaMarket_DataLoader(train_tasksets, sample_batch_size=args.batch_size, shuffle=True, num_workers=0)
-
+    train_tasksets = MetaMarket_Dataset(task_gen_all, num_negatives=args.num_negative, meta_split='train' )
+    train_dataloader = MetaMarket_DataLoader(train_tasksets, sample_batch_size=args.batch_size, shuffle=True, num_workers=0)
+    tgt_valid_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_valid, args.batch_size)
+    tgt_test_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_test, args.batch_size)
     
     ############
     ## Model  
@@ -119,9 +120,7 @@ def build(args):
     ############
     ## Validation and Test Run
     ############
-    tgt_valid_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_valid, args.batch_size)
-    if args.fastmode == False:
-        tgt_test_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_test, args.batch_size)
+    
     print('Run output files:')
     # validation data prediction
     valid_run_mf = mymodel.predict(tgt_valid_dataloader)
