@@ -74,7 +74,7 @@ def build(args):
     tgt_train_ratings = pd.read_csv(tgt_train_data_dir, sep='\t')
 
     print(f'Loading target market {args.tgt_market}: {tgt_train_data_dir}')
-    tgt_task_generator = TaskGenerator(my_id_bank, tgt_train_data_dir, use_qrel=args.use_qrel, rename=args.tgt_market)
+    tgt_task_generator = TaskGenerator(my_id_bank, tgt_train_data_dir, use_qrel=args.use_qrel)
 
     print('Loaded target data!\n')
     valid_qrel_name = os.path.join(args.data_dir, args.tgt_market, 'valid_qrel.tsv')
