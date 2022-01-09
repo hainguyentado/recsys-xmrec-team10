@@ -226,7 +226,7 @@ class TaskGenerator(object):
             negatives_train[userid] = neg_itemids_train
         return negatives_train
         
-    def _sample_negative0(self, ratings):
+    def _sample_negative0(self):
         by_userid_group = self.ratings.groupby("userId")['itemId']
         negatives_train = {}
         for userid, group_frame in by_userid_group:
