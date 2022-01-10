@@ -244,8 +244,8 @@ class NMF(torch.nn.Module):
         for idx, (in_size, out_size) in enumerate(zip(self.mlp_layers[:-1], self.mlp_layers[1:])):
             self.fc_layers.append(torch.nn.Linear(in_size, out_size))
         self.affine_output = torch.nn.Linear(in_features=self.latent_dim + self.mlp_layers[-1], out_features=1)
-        self.user_biases = torch.nn.Embedding(self.num_users, 1)
-        self.item_biases = torch.nn.Embedding(self.num_items, 1)
+        #self.user_biases = torch.nn.Embedding(self.num_users, 1)
+        #self.item_biases = torch.nn.Embedding(self.num_items, 1)
         self.logistic = torch.nn.Sigmoid()
 
     def forward(self, user_indices, item_indices):
@@ -266,7 +266,7 @@ class NMF(torch.nn.Module):
 
         predict_vector = torch.concat([gmf_vector, mlp_vector], dim=1)
         logits = self.affine_output(predict_vector)
-        logits += self.user_biases(user_indices) + self.item_biases(item_indices) 
+        #logits += self.user_biases(user_indices) + self.item_biases(item_indices) 
         rating = self.logistic(logits)
         return rating
 
