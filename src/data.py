@@ -166,7 +166,7 @@ class TaskGenerator(object):
             self.dir = fname.split('/')[:-1]
             self.ratings = pd.read_csv(fname, sep='\t')
             if fname.split('/')[-1] == 'train.tsv':
-                self.ratings = self.ratings/5.0
+                self.ratings['rating'] = self.ratings['rating']/5.0
             if use_qrel:
                 qrel_ratings = pd.read_csv(os.path.join(*self.dir, 'valid_qrel.tsv'), sep='\t')
                 qrel_ratings['rating'] = qrel_ratings['rating'].astype(float)
