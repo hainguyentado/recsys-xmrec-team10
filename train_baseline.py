@@ -99,7 +99,7 @@ def build(args):
         for cur_src_market in src_market_list:
             cur_src_data_dir = os.path.join(args.data_dir, cur_src_market, train_file_names)
             print(f'Loading {cur_src_market}: {cur_src_data_dir}')
-            cur_src_task_generator = TaskGenerator(my_id_bank, cur_src_data_dir,rename=args.tgt_market, use_qrel=args.use_qrel)
+            cur_src_task_generator = TaskGenerator(my_id_bank, cur_src_data_dir,rename=None, use_qrel=True)
             task_gen_all[cur_task_index] = cur_src_task_generator
             cur_task_index+=1
         print('Loaded source data!\n')
