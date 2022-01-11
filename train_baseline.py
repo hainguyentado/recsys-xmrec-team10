@@ -38,6 +38,7 @@ def create_arg_parser():
     parser.add_argument('--alias', type=str, default='gmf', help='type of model used to train' )
     parser.add_argument('--pretrain', type=str, default=None, help='load pretrain model')
     parser.add_argument('--idbank_pretrain', type=str, default=None, help='load pretrain id_bank')
+    parser.add_argument('--freeze_bottom', type=bool, default=False, help='freeze the embedding layers to keep generalization')
     parser.add_argument('--num_epoch', type=int, default=25, help='number of epoches')
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size')
     parser.add_argument('--lr', type=float, default=0.005, help='learning rate')
@@ -121,6 +122,11 @@ def build(args):
     mymodel = Model(args, my_id_bank)
     if args.pretrain is not None:
         mymodel.load(args.pretrain)
+    if args.freeze_bottom:
+        mymodel.model.gmf_user_embedding.weight.requires_grad = False
+        mymodel.model.gmf_item_embedding.weight.requires_grad = False
+        mymodel.model.mlp_user_embedding.weight.requires_grad = False
+        mymodel.model.mlp_item_embedding.weight.requires_grad = False
     #mymodel.fit(train_dataloader, valid_dataloader)
     mymodel.fit(task_gen_all, valid_dataloader)
     ############
