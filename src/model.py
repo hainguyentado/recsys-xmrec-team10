@@ -266,7 +266,7 @@ class NMF(torch.nn.Module):
 
         predict_vector = torch.concat([gmf_vector, mlp_vector], dim=1)
         logits = self.affine_output(predict_vector)
-        #logits += self.user_biases(user_indices) + self.item_biases(item_indices) 
+        #logits += self.user_biases(user_indices) + self.item_biases(item_indices) ##add bias
         rating = self.logistic(logits)
         return rating
 

@@ -37,6 +37,7 @@ def create_arg_parser():
     # MODEL arguments 
     parser.add_argument('--alias', type=str, default='gmf', help='type of model used to train' )
     parser.add_argument('--pretrain', type=str, default=None, help='load pretrain model')
+    parser.add_argument('--idbank_pretrain', type=str, default=None, help='load pretrain id_bank')
     parser.add_argument('--num_epoch', type=int, default=25, help='number of epoches')
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size')
     parser.add_argument('--lr', type=float, default=0.005, help='learning rate')
@@ -45,6 +46,7 @@ def create_arg_parser():
     parser.add_argument('--latent_dim', type=int, default=8, help='latent dimensions')
     parser.add_argument('--latent_dim_mlp', type=int, default=8, help='latent dimensions for mlp model')
     parser.add_argument('--num_negative', type=int, default=4, help='num of negative samples during training')
+    parser.add_argument('--sample_func', type=object, default = lambda : 0, help='how to sample negative rating' )
     parser.add_argument('--mlp_layers', type=int, nargs='+', default=[16, 64, 32, 16, 8], help='layers config for MLP model')
 
     parser.add_argument('--cuda', action='store_true', help='use of cuda')
@@ -66,7 +68,11 @@ def build(args):
     ############
     ## Target Market data
     ############
-    my_id_bank = Central_ID_Bank()
+    if args.idbank_pretrain is not None:
+        with open(args.idbank_pretrain, 'rb') as centralid_file:
+            my_id_bank, args0 = pickle.load(centralid_file)
+    else:
+        my_id_bank = Central_ID_Bank()
     
     train_file_names = args.train_data_file # 'train_5core.tsv', 'train.tsv' for the original data loading
     
@@ -74,7 +80,7 @@ def build(args):
     tgt_train_ratings = pd.read_csv(tgt_train_data_dir, sep='\t')
 
     print(f'Loading target market {args.tgt_market}: {tgt_train_data_dir}')
-    tgt_task_generator = TaskGenerator(my_id_bank, tgt_train_data_dir, use_qrel=args.use_qrel)
+    tgt_task_generator = TaskGenerator(my_id_bank, tgt_train_data_dir, use_qrel=args.use_qrel, sample_func=args.sample_func)
 
     print('Loaded target data!\n')
     valid_qrel_name = os.path.join(args.data_dir, args.tgt_market, 'valid_qrel.tsv')
@@ -99,7 +105,7 @@ def build(args):
         for cur_src_market in src_market_list:
             cur_src_data_dir = os.path.join(args.data_dir, cur_src_market, train_file_names)
             print(f'Loading {cur_src_market}: {cur_src_data_dir}')
-            cur_src_task_generator = TaskGenerator(my_id_bank, cur_src_data_dir,rename=None, use_qrel=True)
+            cur_src_task_generator = TaskGenerator(my_id_bank, cur_src_data_dir,rename=None, use_qrel=True, sample_func=args.sample_func)
             task_gen_all[cur_task_index] = cur_src_task_generator
             cur_task_index+=1
         print('Loaded source data!\n')
