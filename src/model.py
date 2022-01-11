@@ -165,7 +165,7 @@ class Model(object):
             print(f'--id_bank: {cid_filename}')
             torch.save(self.model.state_dict(), model_dir)
             with open(cid_filename, 'wb') as centralid_file:
-                pickle.dump((self.my_id_bank, self.args), centralid_file)
+                pickle.dump(self.my_id_bank, centralid_file)
     
     ## LOAD the model and idbank
     def load(self, checkpoint_dir):

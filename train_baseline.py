@@ -70,7 +70,7 @@ def build(args):
     ############
     if args.idbank_pretrain is not None:
         with open(args.idbank_pretrain, 'rb') as centralid_file:
-            my_id_bank, args0 = pickle.load(centralid_file)
+            my_id_bank = pickle.load(centralid_file)
     else:
         my_id_bank = Central_ID_Bank()
     
