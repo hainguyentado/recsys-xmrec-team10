@@ -122,16 +122,16 @@ def build(args):
     mymodel = Model(args, my_id_bank)
     if args.pretrain is not None:
         mymodel.load(args.pretrain)
-    if args.freeze_bottom:
-        mymodel.model.gmf_user_embedding.weight.requires_grad = False
-        mymodel.model.gmf_item_embedding.weight.requires_grad = False
-        mymodel.model.mlp_user_embedding.weight.requires_grad = False
-        mymodel.model.mlp_item_embedding.weight.requires_grad = False
-    else:
-        mymodel.model.gmf_user_embedding.weight.requires_grad = True
-        mymodel.model.gmf_item_embedding.weight.requires_grad = True
-        mymodel.model.mlp_user_embedding.weight.requires_grad = True
-        mymodel.model.mlp_item_embedding.weight.requires_grad = True
+        if args.freeze_bottom:
+            mymodel.model.gmf_embedding_user.weight.requires_grad = False
+            mymodel.model.gmf_embedding_item.weight.requires_grad = False
+            mymodel.model.mlp_embedding_user.weight.requires_grad = False
+            mymodel.model.mlp_embedding_item.weight.requires_grad = False
+        else:
+            mymodel.model.gmf_embedding_user.weight.requires_grad = True
+            mymodel.model.gmf_embedding_item.weight.requires_grad = True
+            mymodel.model.mlp_embedding_user.weight.requires_grad = True
+            mymodel.model.mlp_embedding_item.weight.requires_grad = True
     #mymodel.fit(train_dataloader, valid_dataloader)
     mymodel.fit(task_gen_all, valid_dataloader)
     ############
