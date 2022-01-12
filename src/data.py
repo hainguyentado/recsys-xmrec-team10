@@ -189,7 +189,7 @@ class TaskGenerator(object):
             self.item_pool = set(self.ratings['itemId'].unique())
 
             # create negative item samples
-            self.negatives_train = self._sample_negative0()
+            self.negatives_train = self._sample_negative0() ## Sử dụng hàm sample negative
             self.train_ratings = self.ratings
         
     
@@ -228,7 +228,7 @@ class TaskGenerator(object):
             negatives_train[userid] = neg_itemids_train
         return negatives_train
         
-    def _sample_negative0(self):
+    def _sample_negative0(self): # sample từ toàn bộ dữ liệu
         by_userid_group = self.ratings.groupby("userId")['itemId']
         negatives_train = {}
         for userid, group_frame in by_userid_group:
