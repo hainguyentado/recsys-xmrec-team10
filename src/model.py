@@ -263,6 +263,7 @@ class NMF(torch.nn.Module):
         for idx, _ in enumerate(range(len(self.fc_layers))):
             mlp_vector = self.fc_layers[idx](mlp_vector)
             mlp_vector = torch.nn.GELU()(mlp_vector)
+            mlp_vector = torch.nn.Dropout(p=0.2)(mlp_vector)
 
         predict_vector = torch.concat([gmf_vector, mlp_vector], dim=1)
         logits = self.affine_output(predict_vector)
