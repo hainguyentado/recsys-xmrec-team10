@@ -127,6 +127,11 @@ def build(args):
         mymodel.model.gmf_item_embedding.weight.requires_grad = False
         mymodel.model.mlp_user_embedding.weight.requires_grad = False
         mymodel.model.mlp_item_embedding.weight.requires_grad = False
+    else:
+        mymodel.model.gmf_user_embedding.weight.requires_grad = True
+        mymodel.model.gmf_item_embedding.weight.requires_grad = True
+        mymodel.model.mlp_user_embedding.weight.requires_grad = True
+        mymodel.model.mlp_item_embedding.weight.requires_grad = True
     #mymodel.fit(train_dataloader, valid_dataloader)
     mymodel.fit(task_gen_all, valid_dataloader)
     ############
