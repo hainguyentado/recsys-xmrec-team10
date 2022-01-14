@@ -249,7 +249,8 @@ class TaskGenerator(object):
             #    ratings.append(1.0)
             #else:
             #    ratings.append(0.1)
-            ratings.append(float(row.rating))
+            #ratings.append(float(row.rating))
+            ratings.append(0.95)
             
             cur_negs = self.negatives_train[int(row.userId)]
             cur_negs = random.sample(cur_negs, min(num_negatives, len(cur_negs)) )

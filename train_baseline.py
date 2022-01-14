@@ -123,9 +123,9 @@ def build(args):
     if args.pretrain is not None:
         mymodel.load(args.pretrain)
         if args.freeze_bottom:
-            mymodel.model.gmf_embedding_user.weight.requires_grad = False
+            #mymodel.model.gmf_embedding_user.weight.requires_grad = False
             mymodel.model.gmf_embedding_item.weight.requires_grad = False
-            mymodel.model.mlp_embedding_user.weight.requires_grad = False
+            #mymodel.model.mlp_embedding_user.weight.requires_grad = False
             mymodel.model.mlp_embedding_item.weight.requires_grad = False
         else:
             mymodel.model.gmf_embedding_user.weight.requires_grad = True
