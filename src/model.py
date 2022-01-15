@@ -20,6 +20,8 @@ class Model(object):
               'optimizer': self.args.optimizer,
               'tgt_market': self.args.tgt_market, #'t1'
               'adam_lr': self.args.lr, #0.005, #1e-3,
+              'sgd_lr':self.args.lr,
+              'sgd_momentum': 0.9,
               'latent_dim': self.args.latent_dim, #8
               'latent_dim_mlp': self.args.latent_dim_mlp, #8
               'num_negative': self.args.num_negative, #4
@@ -263,7 +265,7 @@ class NMF(torch.nn.Module):
         for idx in range(len(self.fc_layers)):
             mlp_vector = self.fc_layers[idx](mlp_vector)
             mlp_vector = torch.nn.GELU()(mlp_vector)
-            mlp_vector = torch.nn.BatchNorm1d(self.mlp_layers[idx+1])(mlp_vector)
+            #mlp_vector = torch.nn.BatchNorm1d(self.mlp_layers[idx+1])(mlp_vector)
             mlp_vector = torch.nn.Dropout(p=0.4)(mlp_vector)
 
         predict_vector = torch.concat([gmf_vector, mlp_vector], dim=1)
