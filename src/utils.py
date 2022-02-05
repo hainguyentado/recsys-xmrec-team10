@@ -1,5 +1,5 @@
 """
-    Some handy functions for pytroch model training ...
+    Some handy functions for pytorch model training ...
 """
 import torch
 import sys
@@ -76,7 +76,7 @@ def get_run_mf(rec_list, unq_users, my_id_bank):
         for item in v:
             citem_ind = int(item[1])
             citem_id = my_id_bank.query_item_id(citem_ind)
-            cur_rank[citem_id]= 2+item[2]
+            cur_rank[citem_id]= item[2]
         cuser_ind = int(k)
         cuser_id = my_id_bank.query_user_id(cuser_ind)
         run_mf[cuser_id] = cur_rank

@@ -6,7 +6,6 @@ from torch.utils.data import DataLoader, Dataset, ConcatDataset
 
 import os
 import json
-import resource
 import sys
 import pickle
 
@@ -49,6 +48,7 @@ def create_arg_parser():
     parser.add_argument('--num_negative', type=int, default=4, help='num of negative samples during training')
     parser.add_argument('--sample_func', type=object, default = lambda : 0, help='how to sample negative rating' )
     parser.add_argument('--mlp_layers', type=int, nargs='+', default=[16, 64, 32, 16, 8], help='layers config for MLP model')
+    parser.add_argument('--drop_rate', type=float, default=0.2, help='dropout rate')
 
     parser.add_argument('--cuda', action='store_true', help='use of cuda')
     parser.add_argument('--seed', type=int, default=42, help='manual seed init')
@@ -114,7 +114,7 @@ def build(args):
     train_tasksets = MetaMarket_Dataset(task_gen_all, num_negatives=args.num_negative, meta_split='train' )
     train_dataloader = MetaMarket_DataLoader(train_tasksets, sample_batch_size=args.batch_size, shuffle=True, num_workers=0)
     tgt_valid_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_valid, args.batch_size)
-    tgt_test_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_test, args.batch_size)
+    #tgt_test_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_test, args.batch_size)
     
     ############
     ## Model  
@@ -122,16 +122,17 @@ def build(args):
     mymodel = Model(args, my_id_bank)
     if args.pretrain is not None:
         mymodel.load(args.pretrain)
-        if args.freeze_bottom:
-            #mymodel.model.gmf_embedding_user.weight.requires_grad = False
-            mymodel.model.gmf_embedding_item.weight.requires_grad = False
-            #mymodel.model.mlp_embedding_user.weight.requires_grad = False
-            mymodel.model.mlp_embedding_item.weight.requires_grad = False
-        else:
-            mymodel.model.gmf_embedding_user.weight.requires_grad = True
-            mymodel.model.gmf_embedding_item.weight.requires_grad = True
-            mymodel.model.mlp_embedding_user.weight.requires_grad = True
-            mymodel.model.mlp_embedding_item.weight.requires_grad = True
+        if args.alias == 'nmf':
+            if args.freeze_bottom:
+                #mymodel.model.gmf_embedding_user.weight.requires_grad = False
+                mymodel.model.gmf_embedding_item.weight.requires_grad = False
+                #mymodel.model.mlp_embedding_user.weight.requires_grad = False
+                mymodel.model.mlp_embedding_item.weight.requires_grad = False
+            else:
+                #mymodel.model.gmf_embedding_user.weight.requires_grad = True
+                mymodel.model.gmf_embedding_item.weight.requires_grad = True
+                #mymodel.model.mlp_embedding_user.weight.requires_grad = True
+                mymodel.model.mlp_embedding_item.weight.requires_grad = True
     #mymodel.fit(train_dataloader, valid_dataloader)
     mymodel.fit(task_gen_all, valid_dataloader)
     ############
@@ -154,11 +155,11 @@ def build(args):
     # print evaluation
     print('Evaluating the validation set\n ')
     valid_qrel_mf = read_qrel_file(os.path.join('DATA', args.tgt_market, 'valid_qrel.tsv'))
-    task_ov_val, _ = get_evaluations_final(valid_run_mf, valid_qrel_mf)
-    for score_name in ['ndcg_cut_10', 'recall_10']:
+    task_ov_val, task_indiv = get_evaluations_final(valid_run_mf, valid_qrel_mf)
+    for score_name in ['ndcg_cut_10', 'recall_10', 'recall_20', 'map_cut_10']:
         print("======= Set val : score(" + score_name + ")=%0.12f =======" % task_ov_val[score_name])
     print('===============\nExperiment finished successfully!')
-    return task_ov_val['ndcg_cut_10']
+    return task_indiv #task_ov_val['ndcg_cut_10']
 if __name__=="__main__":
     parser = create_arg_parser()
     args = parser.parse_args()

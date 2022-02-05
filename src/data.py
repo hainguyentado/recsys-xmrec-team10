@@ -1,7 +1,6 @@
 import os
 import torch
 import random
-import resource
 import pandas as pd
 from copy import deepcopy
 from torch.utils.data import DataLoader, Dataset
@@ -164,7 +163,7 @@ class TaskGenerator(object):
         self.sample_func = sample_func
         # None for evaluation purposes
         if fname is not None: 
-            self.dir = fname.split('/')[:-1]
+            self.dir = fname.split('\\')[:-1]
             self.ratings = pd.read_csv(fname, sep='\t')
             if fname.split('/')[-1] == 'train.tsv':
                 self.ratings['rating'] = self.ratings['rating']/5.0
@@ -189,7 +188,7 @@ class TaskGenerator(object):
             self.item_pool = set(self.ratings['itemId'].unique())
 
             # create negative item samples
-            self.negatives_train = self._sample_negative0() ## Sử dụng hàm sample negative
+            self.negatives_train = self._sample_negative() ## Sử dụng hàm sample negative
             self.train_ratings = self.ratings
         
     
@@ -212,7 +211,7 @@ class TaskGenerator(object):
 
     def _sample_negative2(self): # sample ngẫu nhiên negative từ tập train
         neg_test = open(os.path.join(*self.dir, 'valid_run.tsv'))
-        pos_valid = pd.read_csv(os.path.join(*self.dir, 'valid_qrel.tsv'), sep='\t')#need rename
+        #pos_valid = pd.read_csv(os.path.join(*self.dir, 'valid_qrel.tsv'), sep='\t')#need rename
         negatives_train = {}
         for line in neg_test:
             linetoks = line.split('\t')
@@ -250,7 +249,10 @@ class TaskGenerator(object):
             #else:
             #    ratings.append(0.1)
             #ratings.append(float(row.rating))
-            ratings.append(0.95)
+            if self.valid:
+                    ratings.append(2.0)
+            else:
+                ratings.append(1.0)
             
             cur_negs = self.negatives_train[int(row.userId)]
             cur_negs = random.sample(cur_negs, min(num_negatives, len(cur_negs)) )
@@ -259,7 +261,7 @@ class TaskGenerator(object):
                 items.append(int(neg))
                 #ratings.append(float(0))  # negative samples get 0 rating
                 if self.valid:
-                    ratings.append(0.5)
+                    ratings.append(-1.0)
                 else:
                     ratings.append(self.sample_func()) # get triangular random random.triangular(0,0.4,0.1)
 
