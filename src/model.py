@@ -33,7 +33,8 @@ class Model(object):
               'save_trained': True,
               'num_users': int(self.my_id_bank.last_user_index+1), 
               'num_items': int(self.my_id_bank.last_item_index+1),
-              'mlp_layers': self.args.mlp_layers #[16 64 32 16 8]
+              'mlp_layers': self.args.mlp_layers, #[16 64 32 16 8]
+              'drop_rate' : self.args.drop_rate
         }
         if model_alias == 'gmf':
             self.model = GMF(self.config)
@@ -49,14 +50,15 @@ class Model(object):
     def fit(self, task_gen_all, valid_dataloader):
     #def fit(self, train_dataloader, valid_dataloader): 
         opt = use_optimizer(self.model, self.config)
-        loss_func = torch.nn.BCELoss()
+        loss_func = torch.nn.MSELoss()
         ############
         ## Train
         ############
         #self.model.train()
         #valid_qrel_name = os.path.join(self.args.data_dir, self.config['tgt_market'], 'valid_qrel.tsv')
         #tgt_valid_ratings = pd.read_csv(valid_qrel_name, sep='\t')
-         
+        train_tasksets = MetaMarket_Dataset(task_gen_all, num_negatives=self.args.num_negative, meta_split='train' )
+        train_dataloader = MetaMarket_DataLoader(train_tasksets, sample_batch_size=self.args.batch_size, shuffle=True, num_workers=0)
         for epoch in range(self.args.num_epoch):
             self.model.train()
             tr_time = time()
@@ -65,8 +67,11 @@ class Model(object):
             
             # train the model for some certain iterations
             #train_dataloader.refresh_dataloaders()
-            train_tasksets = MetaMarket_Dataset(task_gen_all, num_negatives=self.args.num_negative, meta_split='train' )
-            train_dataloader = MetaMarket_DataLoader(train_tasksets, sample_batch_size=self.args.batch_size, shuffle=True, num_workers=0)
+            if epoch % 1 == 0: 
+                train_tasksets = MetaMarket_Dataset(task_gen_all, num_negatives=self.args.num_negative, meta_split='train' )
+                train_dataloader = MetaMarket_DataLoader(train_tasksets, sample_batch_size=self.args.batch_size, shuffle=True, num_workers=0)
+            else:
+                train_dataloader.refresh_dataloaders()
             data_lens = [len(train_dataloader[idx]) for idx in range(train_dataloader.num_tasks)]
             iteration_num = max(data_lens)
             nums_batch = 0
@@ -81,6 +86,7 @@ class Model(object):
                     
                     train_user_ids = train_user_ids.to(self.args.device)
                     train_item_ids = train_item_ids.to(self.args.device)
+                    #train_targets += torch.randn(train_targets.shape)*0.02
                     train_targets = train_targets.to(self.args.device)
                 
                     opt.zero_grad()
@@ -220,9 +226,9 @@ class GMF(torch.nn.Module):
         logits = self.affine_output(element_product)
         #logits += self.user_biases(user_indices) + self.item_biases(item_indices) 
 
-        rating = self.logistic(logits)
-        return rating
-
+        #rating = self.logistic(logits)
+        #return rating
+        return logits
     def init_weight(self):
         pass
 
@@ -234,6 +240,7 @@ class NMF(torch.nn.Module):
         self.latent_dim = config['latent_dim']
         self.latent_dim_mlp = config['latent_dim_mlp']
         self.mlp_layers = config['mlp_layers']
+        self.drop_rate = config['drop_rate']
        
         self.gmf_embedding_user = torch.nn.Embedding(num_embeddings=self.num_users, embedding_dim=self.latent_dim)
         self.gmf_embedding_item = torch.nn.Embedding(num_embeddings=self.num_items, embedding_dim=self.latent_dim)
@@ -246,6 +253,7 @@ class NMF(torch.nn.Module):
         for idx, (in_size, out_size) in enumerate(zip(self.mlp_layers[:-1], self.mlp_layers[1:])):
             self.fc_layers.append(torch.nn.Linear(in_size, out_size))
         self.affine_output = torch.nn.Linear(in_features=self.latent_dim + self.mlp_layers[-1], out_features=1)
+        self.affine_output2 = torch.nn.Linear(in_features=12, out_features=1)
         #self.user_biases = torch.nn.Embedding(self.num_users, 1)
         #self.item_biases = torch.nn.Embedding(self.num_items, 1)
         self.logistic = torch.nn.Sigmoid()
@@ -264,15 +272,19 @@ class NMF(torch.nn.Module):
         #mlp_vector = torch.nn.functional.relu(mlp_vector)
         for idx in range(len(self.fc_layers)):
             mlp_vector = self.fc_layers[idx](mlp_vector)
-            mlp_vector = torch.nn.GELU()(mlp_vector)
+            mlp_vector = torch.nn.ELU()(mlp_vector)
+            mlp_vector = torch.nn.Dropout(p=self.drop_rate)(mlp_vector)
             #mlp_vector = torch.nn.BatchNorm1d(self.mlp_layers[idx+1])(mlp_vector)
-            mlp_vector = torch.nn.Dropout(p=0.4)(mlp_vector)
-
+            
         predict_vector = torch.concat([gmf_vector, mlp_vector], dim=1)
+        #predict_vector = torch.nn.Dropout(p=0.1)(predict_vector)
         logits = self.affine_output(predict_vector)
+        #logits = torch.nn.ReLU()(logits)
+        #logits = self.affine_output2(logits)
         #logits += self.user_biases(user_indices) + self.item_biases(item_indices) ##add bias
-        rating = self.logistic(logits)
-        return rating
+        #rating = self.logistic(logits) + 0.5
+        #return rating
+        return logits
 
     def init_weight(self):
         pass
@@ -329,14 +341,14 @@ class MLP(torch.nn.Module):
             # Perform ReLU activation
             vector = torch.nn.ELU()(vector)
             # vector = torch.nn.BatchNorm1d()(vector)
-            # vector = torch.nn.Dropout(p=0.5)(vector)
+            vector = torch.nn.Dropout(p=0.2)(vector)
 
         # Apply linear transformation to the final vector
         logits = self.affine_output(vector)
         # Apply sigmoid (logistic) to get the final predicted rating
-        rating = self.logistic(logits)
+        #rating = self.logistic(logits)
 
-        return rating
+        return logits
 
     def init_weight(self):
         pass
