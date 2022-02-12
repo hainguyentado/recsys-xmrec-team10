@@ -188,9 +188,10 @@ class TaskGenerator(object):
             self.item_pool = set(self.ratings['itemId'].unique())
 
             # create negative item samples
-            self.negatives_train = self._sample_negative0() ## Sử dụng hàm sample negative
-            self.train_ratings = self.ratings
-        
+            self.negatives_train = self._sample_negative2() ## Sử dụng hàm sample negative
+            if valid:
+                self.negatives_train = self._sample_negative()
+                
     
     def _sample_negative(self): # sample ngẫu nhiên negative trong tập 99valid_run  ---> better (just in valid)
         neg_samples = open(os.path.join(*self.dir, 'valid_run.tsv'))
@@ -251,7 +252,7 @@ class TaskGenerator(object):
             #ratings.append(float(row.rating))
             if self.valid:
                 ratings.append(2.0)
-                for i in range(30):
+                for i in range(20):
                     users.append(int(row.userId))
                     items.append(int(row.itemId))
                     ratings.append(2.0)
