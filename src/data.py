@@ -191,6 +191,7 @@ class TaskGenerator(object):
             self.negatives_train = self._sample_negative2() ## Sử dụng hàm sample negative
             if valid:
                 self.negatives_train = self._sample_negative()
+            self.train_ratings = self.ratings
                 
     
     def _sample_negative(self): # sample ngẫu nhiên negative trong tập 99valid_run  ---> better (just in valid)
