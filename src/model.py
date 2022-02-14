@@ -47,7 +47,7 @@ class Model(object):
         print(self.model)
         return self.model
     
-    def fit(self, task_gen_all, valid_dataloader):
+    def fit(self, task_gen_all, valid_dataloader, eval_dataloader):
     #def fit(self, train_dataloader, valid_dataloader): 
         opt = use_optimizer(self.model, self.config)
         loss_func = torch.nn.MSELoss(reduction='none')
@@ -57,6 +57,7 @@ class Model(object):
         #self.model.train()
         #valid_qrel_name = os.path.join(self.args.data_dir, self.config['tgt_market'], 'valid_qrel.tsv')
         #tgt_valid_ratings = pd.read_csv(valid_qrel_name, sep='\t')
+        qrel_mf = read_qrel_file(os.path.join('DATA', self.args.tgt_market, 'valid_qrel.tsv'))  
         train_tasksets = MetaMarket_Dataset(task_gen_all, num_negatives=self.args.num_negative, meta_split='train' )
         train_dataloader = MetaMarket_DataLoader(train_tasksets, sample_batch_size=self.args.batch_size, shuffle=True, num_workers=0)
         for epoch in range(self.args.num_epoch):
@@ -92,15 +93,15 @@ class Model(object):
                     opt.zero_grad()
                     ratings_pred = self.model(train_user_ids, train_item_ids)
                     loss = loss_func(ratings_pred.view(-1), train_targets)
-                    loss *= train_targets
+                    loss *= train_targets*2
                     loss = loss.mean()
                     loss.backward()
                     opt.step()    
                     total_loss += loss.item()
                     nums_batch += 1
             print('Total Train Loss: ', total_loss/nums_batch, ' Time: ', time()-tr_time)
-            self.calc_valid_loss(valid_dataloader, loss_func)        
-            
+            self.calc_valid_loss(valid_dataloader, loss_func)     
+            self.calc_ndcg(eval_dataloader, qrel_mf)
             #sys.stdout.flush()
             print('-' * 80)
         
@@ -127,23 +128,33 @@ class Model(object):
                 valid_user_ids = valid_user_ids.to(self.args.device)
                 valid_item_ids = valid_item_ids.to(self.args.device)
                 valid_targets = valid_targets.to(self.args.device)
+                mask = valid_targets > 0.6
 
                 with torch.no_grad():
                     ratings_pred = self.model(valid_user_ids, valid_item_ids)
-                    loss = loss_func(ratings_pred.view(-1), valid_targets).mean()
-                    vl_loss += loss.item() 
+                    loss = loss_func(ratings_pred.view(-1), valid_targets)
+                    loss = loss*(mask*0.9+0.1)/(torch.count_nonzero(mask)*2)
+                    vl_loss += loss.sum().item() 
                     nums_batch += 1
             
-        print('Total Valid Loss: ', vl_loss/nums_batch, ' Time: ', time()-vl_time)    
+        print('Total Valid Loss: ', vl_loss/nums_batch, ' Time: ', time()-vl_time)
         
-        
+    def calc_ndcg(self, eval_dataloader, qrel_mf):
+        run_mf = self.predict(eval_dataloader, 5)
+        task_ov_val, task_indiv = get_evaluations_final(run_mf, qrel_mf)
+        print('NDCG@10: ', task_ov_val['ndcg_cut_10'], '  HR@10: ', task_ov_val['recall_10'])
+
     # produce the ranking of items for users
-    def predict(self, eval_dataloader):
+    def predict(self, eval_dataloader, rate=None):
         stime = time()
         self.model.eval()
         task_rec_all = []
         task_unq_users = set()
-        for test_batch in eval_dataloader:
+        if rate is None:
+            rate = len(eval_dataloader)
+        for i, test_batch in enumerate(eval_dataloader):
+            if i > rate:
+                break
             test_user_ids, test_item_ids, test_targets = test_batch
     
             cur_users = [user.item() for user in test_user_ids]
@@ -279,7 +290,7 @@ class NMF(torch.nn.Module):
             #mlp_vector = torch.nn.BatchNorm1d(self.mlp_layers[idx+1])(mlp_vector)
             
         predict_vector = torch.concat([gmf_vector, mlp_vector], dim=1)
-        #predict_vector = torch.nn.Dropout(p=0.1)(predict_vector)
+        predict_vector = torch.nn.Dropout(p=0.1)(predict_vector)
         logits = self.affine_output(predict_vector)
         #logits = torch.nn.ELU()(logits)
         #logits = self.affine_output2(logits)

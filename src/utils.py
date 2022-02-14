@@ -15,8 +15,8 @@ def set_seed(args):
     torch.manual_seed(args.seed)
 
 
-def get_evaluations_final(run_mf, test):
-    metrics = {'recall_5', 'recall_10', 'recall_20', 'P_5', 'P_10', 'P_20', 'map_cut_10','ndcg_cut_10'}
+def get_evaluations_final(run_mf, test): # 'recall_5','P_5', 'P_10', 'P_20', 
+    metrics = {'recall_10', 'recall_20', 'map_cut_10','ndcg_cut_10'}
     eval_obj = Evaluator(metrics)
     indiv_res = eval_obj.evaluate(run_mf, test)
     overall_res = eval_obj.show_all()

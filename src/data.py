@@ -252,11 +252,7 @@ class TaskGenerator(object):
             #    ratings.append(0.1)
             #ratings.append(float(row.rating))
             if self.valid:
-                ratings.append(2.0)
-                for i in range(20):
-                    users.append(int(row.userId))
-                    items.append(int(row.itemId))
-                    ratings.append(2.0)
+                ratings.append(1.8)
             else:
                 ratings.append(1.0)
             
@@ -267,7 +263,7 @@ class TaskGenerator(object):
                 items.append(int(neg))
                 #ratings.append(float(0))  # negative samples get 0 rating
                 if self.valid:
-                    ratings.append(-1.0)
+                    ratings.append(-0.8)
                 else:
                     ratings.append(self.sample_func()) # get triangular random random.triangular(0,0.4,0.1)
 

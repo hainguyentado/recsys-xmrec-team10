@@ -90,8 +90,8 @@ def build(args):
     task_valid_all = {
         0: tgt_vl_generator
     }
-    valid_tasksets = MetaMarket_Dataset(task_valid_all, num_negatives=20, meta_split='train' )
-    valid_dataloader = MetaMarket_DataLoader(valid_tasksets, sample_batch_size=args.batch_size, shuffle=True, num_workers=0)
+    valid_tasksets = MetaMarket_Dataset(task_valid_all, num_negatives=10, meta_split='train' )
+    valid_dataloader = MetaMarket_DataLoader(valid_tasksets, sample_batch_size=8192, shuffle=True, num_workers=0)
     # task_gen_all: contains data for all training markets, index 0 for target market data
     task_gen_all = {
         0: tgt_task_generator
@@ -113,8 +113,8 @@ def build(args):
 
     train_tasksets = MetaMarket_Dataset(task_gen_all, num_negatives=args.num_negative, meta_split='train' )
     train_dataloader = MetaMarket_DataLoader(train_tasksets, sample_batch_size=args.batch_size, shuffle=True, num_workers=0)
-    tgt_valid_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_valid, args.batch_size)
-    #tgt_test_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_test, args.batch_size)
+    tgt_valid_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_valid, 10000)
+    #tgt_test_dataloader = tgt_task_generator.instance_a_market_valid_dataloader(args.tgt_market_test, 10000)
     
     ############
     ## Model  
@@ -134,7 +134,7 @@ def build(args):
                 #mymodel.model.mlp_embedding_user.weight.requires_grad = True
                 mymodel.model.mlp_embedding_item.weight.requires_grad = True
     #mymodel.fit(train_dataloader, valid_dataloader)
-    mymodel.fit(task_gen_all, valid_dataloader)
+    mymodel.fit(task_gen_all, valid_dataloader, tgt_valid_dataloader)
     ############
     ## Validation and Test Run
     ############
