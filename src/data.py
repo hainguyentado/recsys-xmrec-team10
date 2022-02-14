@@ -188,7 +188,7 @@ class TaskGenerator(object):
             self.item_pool = set(self.ratings['itemId'].unique())
 
             # create negative item samples
-            self.negatives_train = self._sample_negative() ## Sử dụng hàm sample negative
+            self.negatives_train = self._sample_negative0() ## Sử dụng hàm sample negative
             if valid:
                 self.negatives_train = self._sample_negative()
             self.train_ratings = self.ratings

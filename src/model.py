@@ -285,11 +285,11 @@ class NMF(torch.nn.Module):
         #mlp_vector = torch.nn.functional.relu(mlp_vector)
         for idx in range(len(self.fc_layers)):
             mlp_vector = self.fc_layers[idx](mlp_vector)
-            mlp_vector = torch.nn.ELU()(mlp_vector)
-            mlp_vector = torch.nn.Dropout(p=self.drop_rate)(mlp_vector)
+            mlp_vector = torch.nn.SELU()(mlp_vector)
+            mlp_vector = torch.nn.AlphaDropout(p=self.drop_rate)(mlp_vector)
             #mlp_vector = torch.nn.BatchNorm1d(self.mlp_layers[idx+1])(mlp_vector)
 
-        gmf_vector = torch.nn.Dropout(p=0.05)(gmf_vector)    
+        gmf_vector = torch.nn.Dropout(p=0.01)(gmf_vector)    
         predict_vector = torch.concat([gmf_vector, mlp_vector], dim=1)
         logits = self.affine_output(predict_vector)
         #logits = torch.nn.ELU()(logits)
