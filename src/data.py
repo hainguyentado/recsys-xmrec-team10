@@ -163,7 +163,7 @@ class TaskGenerator(object):
         self.sample_func = sample_func
         # None for evaluation purposes
         if fname is not None: 
-            self.dir = fname.split('\\')[:-1]
+            self.dir = fname.split('/')[:-1]
             self.ratings = pd.read_csv(fname, sep='\t')
             if fname.split('/')[-1] == 'train.tsv':
                 self.ratings['rating'] = self.ratings['rating']/5.0
@@ -191,8 +191,7 @@ class TaskGenerator(object):
             self.negatives_train = self._sample_negative2() ## Sử dụng hàm sample negative
             if valid:
                 self.negatives_train = self._sample_negative()
-            self.train_ratings = self.ratings
-        
+                
     
     def _sample_negative(self): # sample ngẫu nhiên negative trong tập 99valid_run  ---> better (just in valid)
         neg_samples = open(os.path.join(*self.dir, 'valid_run.tsv'))
