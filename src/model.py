@@ -266,7 +266,7 @@ class NMF(torch.nn.Module):
         for idx, (in_size, out_size) in enumerate(zip(self.mlp_layers[:-1], self.mlp_layers[1:])):
             self.fc_layers.append(torch.nn.Linear(in_size, out_size))
         self.affine_output = torch.nn.Linear(in_features=self.latent_dim + self.mlp_layers[-1], out_features=1)
-        #self.affine_output2 = torch.nn.Linear(in_features=12, out_features=1)
+        self.affine_output2 = torch.nn.Linear(in_features=self.latent_dim_mlp*2, out_features=1)
         #self.user_biases = torch.nn.Embedding(self.num_users, 1)
         #self.item_biases = torch.nn.Embedding(self.num_items, 1)
         self.logistic = torch.nn.Sigmoid()
@@ -279,10 +279,7 @@ class NMF(torch.nn.Module):
         mlp_user_embedding = self.mlp_embedding_user(user_indices)
         mlp_item_embedding = self.mlp_embedding_item(item_indices)
         mlp_vector = torch.concat([mlp_user_embedding, mlp_item_embedding], dim=1)
-        #mlp_vector = self.mlp_layer1(mlp_vector)
-        #mlp_vector = torch.nn.functional.relu(mlp_vector)
-        #mlp_vector = self.mlp_layer2(mlp_vector)
-        #mlp_vector = torch.nn.functional.relu(mlp_vector)
+        logits2 = self.affine_output2(mlp_vector)
         for idx in range(len(self.fc_layers)):
             mlp_vector = self.fc_layers[idx](mlp_vector)
             mlp_vector = torch.nn.SELU()(mlp_vector)
@@ -293,11 +290,11 @@ class NMF(torch.nn.Module):
         predict_vector = torch.concat([gmf_vector, mlp_vector], dim=1)
         logits = self.affine_output(predict_vector)
         #logits = torch.nn.ELU()(logits)
-        #logits = self.affine_output2(logits)
+        
         #logits += self.user_biases(user_indices) + self.item_biases(item_indices) ##add bias
         #rating = self.logistic(logits) + 0.5
         #return rating
-        return logits
+        return logits*0.7 + logits2*0.3
 
     def init_weight(self):
         pass
