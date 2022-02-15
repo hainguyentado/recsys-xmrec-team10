@@ -87,14 +87,14 @@ class Model(object):
                     
                     train_user_ids = train_user_ids.to(self.args.device)
                     train_item_ids = train_item_ids.to(self.args.device)
-                    train_targets += torch.randn(train_targets.shape)*0.02
+                    #train_targets += torch.randn(train_targets.shape)*0.02
                     train_targets = train_targets.to(self.args.device)
                 
                     opt.zero_grad()
                     ratings_pred = self.model(train_user_ids, train_item_ids)
                     loss = loss_func(ratings_pred.view(-1), train_targets)
                     loss *= train_targets*2
-                    loss = loss.mean()
+                    loss = loss.sum()
                     loss.backward()
                     opt.step()    
                     total_loss += loss.item()
@@ -266,10 +266,10 @@ class NMF(torch.nn.Module):
         for idx, (in_size, out_size) in enumerate(zip(self.mlp_layers[:-1], self.mlp_layers[1:])):
             self.fc_layers.append(torch.nn.Linear(in_size, out_size))
         self.affine_output = torch.nn.Linear(in_features=self.latent_dim + self.mlp_layers[-1], out_features=1)
-        self.affine_output2 = torch.nn.Linear(in_features=self.latent_dim_mlp*2, out_features=1)
+        self.affine_output2 = torch.nn.Bilinear(in1_features=self.latent_dim, in2_features=self.latent_dim_mlp*2, out_features=1)
         #self.user_biases = torch.nn.Embedding(self.num_users, 1)
         #self.item_biases = torch.nn.Embedding(self.num_items, 1)
-        self.logistic = torch.nn.Sigmoid()
+        #self.logistic = torch.nn.Sigmoid()
 
     def forward(self, user_indices, item_indices):
         gmf_user_embedding = self.gmf_embedding_user(user_indices)
@@ -279,14 +279,14 @@ class NMF(torch.nn.Module):
         mlp_user_embedding = self.mlp_embedding_user(user_indices)
         mlp_item_embedding = self.mlp_embedding_item(item_indices)
         mlp_vector = torch.concat([mlp_user_embedding, mlp_item_embedding], dim=1)
-        logits2 = self.affine_output2(mlp_vector)
+        logits2 = self.affine_output2(gmf_vector, mlp_vector)
         for idx in range(len(self.fc_layers)):
             mlp_vector = self.fc_layers[idx](mlp_vector)
             mlp_vector = torch.nn.SELU()(mlp_vector)
             mlp_vector = torch.nn.AlphaDropout(p=self.drop_rate)(mlp_vector)
             #mlp_vector = torch.nn.BatchNorm1d(self.mlp_layers[idx+1])(mlp_vector)
 
-        gmf_vector = torch.nn.Dropout(p=0.01)(gmf_vector)    
+        #gmf_vector = torch.nn.Dropout(p=0.01)(gmf_vector)    
         predict_vector = torch.concat([gmf_vector, mlp_vector], dim=1)
         logits = self.affine_output(predict_vector)
         #logits = torch.nn.ELU()(logits)
