@@ -93,8 +93,8 @@ class Model(object):
                     opt.zero_grad()
                     ratings_pred = self.model(train_user_ids, train_item_ids)
                     loss = loss_func(ratings_pred.view(-1), train_targets)
-                    loss *= train_targets*2
-                    loss = loss.sum()
+                    loss *= train_targets*1.5
+                    loss = loss.mean()
                     loss.backward()
                     opt.step()    
                     total_loss += loss.item()
@@ -265,8 +265,8 @@ class NMF(torch.nn.Module):
         self.fc_layers = torch.nn.ModuleList()
         for idx, (in_size, out_size) in enumerate(zip(self.mlp_layers[:-1], self.mlp_layers[1:])):
             self.fc_layers.append(torch.nn.Linear(in_size, out_size))
-        self.affine_output = torch.nn.Linear(in_features=self.latent_dim + self.mlp_layers[-1], out_features=1)
-        self.affine_output2 = torch.nn.Bilinear(in1_features=self.latent_dim, in2_features=self.latent_dim_mlp*2, out_features=1)
+        self.affine_output = torch.nn.Linear(in_features=self.latent_dim*2 + self.mlp_layers[-1], out_features=1)
+        self.affine_output2 = torch.nn.Bilinear(in1_features=self.latent_dim, in2_features=self.latent_dim_mlp*2, out_features=self.latent_dim)
         #self.user_biases = torch.nn.Embedding(self.num_users, 1)
         #self.item_biases = torch.nn.Embedding(self.num_items, 1)
         #self.logistic = torch.nn.Sigmoid()
@@ -287,14 +287,14 @@ class NMF(torch.nn.Module):
             #mlp_vector = torch.nn.BatchNorm1d(self.mlp_layers[idx+1])(mlp_vector)
 
         #gmf_vector = torch.nn.Dropout(p=0.01)(gmf_vector)    
-        predict_vector = torch.concat([gmf_vector, mlp_vector], dim=1)
+        predict_vector = torch.concat([gmf_vector, mlp_vector, logits2], dim=1)
         logits = self.affine_output(predict_vector)
         #logits = torch.nn.ELU()(logits)
         
         #logits += self.user_biases(user_indices) + self.item_biases(item_indices) ##add bias
         #rating = self.logistic(logits) + 0.5
         #return rating
-        return logits*0.7 + logits2*0.3
+        return logits
 
     def init_weight(self):
         pass
